@@ -20,6 +20,8 @@
   input,select{font-family:inherit;}
 
   .app{max-width:1180px; margin:0 auto; padding:clamp(.9rem,2.5vw,1.8rem);}
+  #errbar{display:none; position:sticky; top:0; z-index:100; background:var(--danger); color:#fff;
+    padding:.6rem 1rem; font-size:.86rem; border-radius:8px; margin-bottom:1rem; font-family:var(--font-mono);}
 
   /* header */
   .top{display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap;
@@ -148,6 +150,7 @@
 </style>
 
 <div class="app">
+  <div id="errbar" role="alert"></div>
   <div class="top no-print">
     <div class="brand">
       <p class="eyebrow">Estudio de patrones · ganchillo</p>
@@ -224,8 +227,14 @@
         </div>
       </div>
 
+      <div class="card">
+        <h2><span class="num">★</span> Diseños de ejemplo</h2>
+        <p class="hint">Toca uno para ver cómo se eligen las medidas y los colores de cada diseño (son los de las fotos). Luego puedes cambiarlo a tu gusto y guardarlo como tuyo.</p>
+        <div class="saved-list" id="exampleList"></div>
+      </div>
+
       <div class="card saved-card">
-        <h2><span class="num">4</span> Tus diseños</h2>
+        <h2><span class="num">5</span> Tus diseños</h2>
         <p class="hint">Guarda este diseño con un nombre para volver a él cuando quieras.</p>
         <div class="field">
           <div class="row">
@@ -257,6 +266,7 @@
 <script>
 (function(){
   "use strict";
+  window.addEventListener('error', function(e){ try{ var b=document.getElementById('errbar'); if(b){ b.textContent='⚠️ Error: '+((e&&e.message)||'desconocido')+'. Prueba a abrir el archivo con Chrome o Safari.'; b.style.display='block'; } }catch(_){} });
   var $ = function(s,r){return (r||document).querySelector(s);};
   var el = function(t,a,h){var e=document.createElement(t); if(a)for(var k in a)e.setAttribute(k,a[k]); if(h!=null)e.innerHTML=h; return e;};
 
@@ -286,6 +296,13 @@
     {v:"punta", t:"Solo la punta"},
     {v:"arriba", t:"Borde superior (hombros)"}
   ];
+  var EXAMPLES = [
+    {name:"Camel & Crudo (foto 1)", sizeKey:"m", wingspan:155, hookMm:4.5, bodyColor:"#b5793f", fringeColor:"#e9dcc2", density:1, fringeLen:28, strands:6, addons:[]},
+    {name:"Mostaza & Crudo (foto 4)", sizeKey:"l", wingspan:185, hookMm:4.5, bodyColor:"#d69a2a", fringeColor:"#e9dcc2", density:1, fringeLen:30, strands:6, addons:[]},
+    {name:"Crudo peludo (foto 5)", sizeKey:"m", wingspan:150, hookMm:5.0, bodyColor:"#e9dcc2", fringeColor:"#f4efe6", density:2, fringeLen:32, strands:8, addons:[]},
+    {name:"Pequeño terracota + punta burdeos", sizeKey:"s", wingspan:120, hookMm:4.5, bodyColor:"#b45a3c", fringeColor:"#e9dcc2", density:1, fringeLen:26, strands:6, addons:[{qty:12, zona:"punta", color:"#6e2f3a"}]}
+  ];
+  function sumVals(o){ var s=0; for(var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)) s+=o[k]; } return s; }
 
   // ---------- estado ----------
   var state = null;
@@ -366,7 +383,7 @@
     var r=$("#readout");
     r.innerHTML='<span><b>'+e.wing+'</b> cm ancho</span><span><b>'+e.depth+'</b> cm alto</span>'+
       '<span><b>'+e.n+'</b> vueltas</span><span><b>'+e.arcs+'</b> arcos</span>'+
-      '<span><b>'+(e.baseBundles+ Object.values(addonBundles()).reduce(function(x,y){return x+y;},0))+'</b> flecos</span>';
+      '<span><b>'+(e.baseBundles+ sumVals(addonBundles()))+'</b> flecos</span>';
   }
   function shade(hex,amt){
     var c=hex.replace('#',''); if(c.length===3)c=c.replace(/(.)/g,'$1$1');
@@ -508,6 +525,22 @@
   }
 
   // ---------- guardar / cargar ----------
+  function loadDesign(d){
+    state=Object.assign(defaultState(), d);
+    state.addons=(d.addons||[]).map(function(x){ return Object.assign({},x); });
+    syncAll(); update();
+  }
+  function renderExamples(){
+    var wrap=$("#exampleList"); wrap.innerHTML='';
+    EXAMPLES.forEach(function(d){
+      var chip=el('div',{'class':'chip'});
+      chip.appendChild(el('span',{'class':'dot',style:'background:'+d.bodyColor}));
+      var load=el('button',{type:'button','class':'load',title:'Probar este diseño'}, esc(d.name));
+      load.addEventListener('click',function(){ loadDesign(d); toast('Ejemplo cargado ✓'); });
+      chip.appendChild(load); wrap.appendChild(chip);
+    });
+  }
+
   var LS='chalDesigns.v1';
   function loadStore(){ try{ return JSON.parse(localStorage.getItem(LS)||'[]'); }catch(e){ return []; } }
   function saveStore(a){ try{ localStorage.setItem(LS, JSON.stringify(a)); }catch(e){} }
@@ -518,7 +551,7 @@
       var chip=el('div',{'class':'chip'});
       chip.appendChild(el('span',{'class':'dot',style:'background:'+d.bodyColor}));
       var load=el('button',{'class':'load',title:'Cargar'}, esc(d.name||'(sin nombre)'));
-      load.addEventListener('click',function(){ state=Object.assign(defaultState(),d); state.addons=(d.addons||[]).map(function(x){return Object.assign({},x);}); syncAll(); update(); toast('Diseño cargado'); });
+      load.addEventListener('click',function(){ loadDesign(d); toast('Diseño cargado'); });
       var del=el('button',{title:'Borrar'},'🗑');
       del.addEventListener('click',function(){ var s=loadStore(); s.splice(i,1); saveStore(s); renderSaved(); toast('Diseño borrado'); });
       chip.appendChild(load); chip.appendChild(del); wrap.appendChild(chip);
@@ -563,11 +596,16 @@
   }
 
   // ---------- init ----------
-  state=defaultState();
-  buildSize();
-  buildSwatches($("#swBody"), function(){return state.bodyColor;}, function(v){state.bodyColor=v;});
-  buildSwatches($("#swFringe"), function(){return state.fringeColor;}, function(v){state.fringeColor=v;});
-  bind(); syncAll(); renderSaved(); update();
+  try{
+    state=defaultState();
+    buildSize();
+    buildSwatches($("#swBody"), function(){return state.bodyColor;}, function(v){state.bodyColor=v;});
+    buildSwatches($("#swFringe"), function(){return state.fringeColor;}, function(v){state.fringeColor=v;});
+    bind(); syncAll(); renderExamples(); renderSaved(); update();
+  }catch(err){
+    var b=document.getElementById('errbar');
+    if(b){ b.textContent='⚠️ No se pudo iniciar la app: '+err.message+'. Abre el archivo con Chrome o Safari (no dentro de WhatsApp).'; b.style.display='block'; }
+  }
 })();
 </script>
 </html>
