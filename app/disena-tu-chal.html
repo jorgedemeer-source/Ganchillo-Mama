@@ -1,0 +1,573 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diseña tu Chal · Estudio de patrones de ganchillo</title>
+<style>
+  :root{
+    --paper:#efe8d9; --surface:#f7f2e8; --panel:#fbf8f1; --inset:#ece3d0;
+    --ink:#33281a; --ink-soft:#6c5b44; --ink-faint:#93826650; --muted:#8a7a60;
+    --accent:#a9702f; --accent-deep:#7c4f24; --accent-soft:#e7d8bf;
+    --line:#d9ccb2; --line-soft:#e6dcc7; --good:#5f7d3b; --danger:#a64b34;
+    --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper); color:var(--ink); font-family:var(--font-body); font-size:16px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; letter-spacing:-.01em;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select{font-family:inherit;}
+
+  .app{max-width:1180px; margin:0 auto; padding:clamp(.9rem,2.5vw,1.8rem);}
+
+  /* header */
+  .top{display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+    border-bottom:2px solid var(--accent); padding-bottom:1rem; margin-bottom:1.3rem;}
+  .brand .eyebrow{font-family:var(--font-mono); font-size:.68rem; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--accent-deep); margin:0 0 .3rem;}
+  .brand h1{font-size:clamp(1.5rem,4.2vw,2.1rem); margin:0; line-height:1.05;}
+  .brand p{margin:.35rem 0 0; color:var(--ink-soft); font-size:.92rem; max-width:34rem;}
+  .top .actions{display:flex; gap:.5rem; flex-wrap:wrap;}
+
+  .btn{border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:7px;
+    padding:.5rem .8rem; font-size:.86rem; font-weight:600; display:inline-flex; align-items:center; gap:.4rem;
+    transition:border-color .15s, background .15s;}
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn.primary:hover{background:var(--accent-deep);}
+  .btn.ghost{background:transparent;}
+  .btn.sm{padding:.32rem .55rem; font-size:.78rem; border-radius:6px;}
+  .btn:focus-visible,input:focus-visible,select:focus-visible,.swatch:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* layout */
+  .grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:1.3rem; align-items:start;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.15rem; margin-bottom:1.1rem;}
+  .card > h2{font-size:1.05rem; margin:0 0 .2rem; display:flex; align-items:center; gap:.5rem;}
+  .card > .hint{color:var(--muted); font-size:.82rem; margin:0 0 .9rem;}
+  .card .num{font-family:var(--font-mono); font-size:.66rem; letter-spacing:.12em; color:var(--accent-deep);
+    border:1px solid var(--line); border-radius:4px; padding:.1rem .38rem;}
+
+  .field{margin:.85rem 0;}
+  .field > label{display:block; font-size:.78rem; font-weight:700; letter-spacing:.02em; color:var(--ink-soft);
+    text-transform:uppercase; margin-bottom:.4rem;}
+
+  /* segmented */
+  .seg{display:flex; gap:.4rem; flex-wrap:wrap;}
+  .seg button{border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:.5rem .7rem;
+    font-size:.85rem; color:var(--ink); text-align:left; flex:1 1 auto; min-width:8.5rem;}
+  .seg button small{display:block; color:var(--muted); font-weight:400; font-size:.72rem; margin-top:.12rem;
+    font-family:var(--font-mono);}
+  .seg button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent);}
+  .seg button b{font-weight:700;}
+
+  .row{display:flex; gap:.6rem; align-items:center; flex-wrap:wrap;}
+  input[type="number"], input[type="text"], select{border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:8px; padding:.5rem .6rem; font-size:.9rem; width:100%;}
+  input[type="range"]{width:100%;}
+  .inline{display:flex; gap:.5rem; align-items:center;}
+  .inline input[type="number"]{width:5.5rem;}
+  .unit{color:var(--muted); font-size:.82rem; font-family:var(--font-mono);}
+
+  /* swatches */
+  .swatches{display:flex; flex-wrap:wrap; gap:.4rem;}
+  .swatch{width:30px; height:30px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line);
+    padding:0; position:relative;}
+  .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent); transform:scale(1.08);}
+  .colorpick{display:flex; align-items:center; gap:.5rem; margin-top:.5rem;}
+  .colorpick input[type="color"]{width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; padding:2px;}
+  .colorname{font-size:.8rem; color:var(--ink-soft); font-family:var(--font-mono);}
+
+  /* addons */
+  .addon{display:grid; grid-template-columns:4.6rem 1fr 2.2rem 1.8rem; gap:.5rem; align-items:center;
+    padding:.55rem; border:1px dashed var(--line); border-radius:9px; margin-bottom:.5rem; background:var(--surface);}
+  .addon .mini-color{width:100%; height:32px; border:1px solid var(--line); border-radius:6px; padding:2px; background:none;}
+  .addon .del{border:none; background:none; color:var(--danger); font-size:1.1rem; line-height:1;}
+  .addon-empty{color:var(--muted); font-size:.84rem; font-style:italic; margin:.2rem 0 .6rem;}
+
+  /* preview */
+  .preview-wrap{position:sticky; top:1rem;}
+  figure.preview{margin:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fbf9f4;}
+  figure.preview svg{display:block; width:100%; height:auto;}
+  .readout{display:flex; flex-wrap:wrap; gap:.15rem .4rem; padding:.7rem .9rem; border-top:1px solid var(--line);
+    background:var(--panel); font-family:var(--font-mono); font-size:.76rem; color:var(--ink-soft);}
+  .readout b{color:var(--ink);}
+  .readout span{background:var(--inset); border-radius:20px; padding:.15rem .55rem; white-space:nowrap;}
+
+  /* saved */
+  .saved-list{display:flex; flex-wrap:wrap; gap:.45rem;}
+  .chip{display:inline-flex; align-items:center; gap:.45rem; border:1px solid var(--line); background:var(--surface);
+    border-radius:20px; padding:.32rem .35rem .32rem .7rem; font-size:.82rem;}
+  .chip .dot{width:12px; height:12px; border-radius:50%; box-shadow:0 0 0 1px var(--line);}
+  .chip button{border:none; background:none; color:var(--muted); font-size:.95rem; line-height:1; padding:0 .15rem;}
+  .chip button:hover{color:var(--danger);}
+  .chip .load{color:var(--accent-deep); font-weight:700;}
+
+  /* pattern output */
+  .pattern{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.3rem 1.4rem;}
+  .pattern h2.title{font-size:1.5rem; margin:0 0 .1rem;}
+  .pattern .sub{color:var(--ink-soft); font-size:.9rem; margin:0 0 1rem;}
+  .pattern section{margin:1.15rem 0; break-inside:avoid;}
+  .pattern h3{font-size:.76rem; text-transform:uppercase; letter-spacing:.13em; font-family:var(--font-mono);
+    color:var(--accent-deep); font-weight:600; margin:0 0 .5rem; padding-bottom:.3rem; border-bottom:1px solid var(--line-soft);}
+  .pattern p{margin:.5rem 0;}
+  .pattern ul,.pattern ol{margin:.5rem 0; padding-left:1.25rem;}
+  .pattern li{margin:.3rem 0;}
+  .pattern code{font-family:var(--font-mono); font-size:.85em; background:var(--inset); padding:.06em .35em; border-radius:4px; color:var(--accent-deep);}
+  .kv{display:grid; grid-template-columns:1fr auto; gap:.2rem .8rem; font-size:.92rem;}
+  .kv .k{color:var(--ink-soft);} .kv .v{font-family:var(--font-mono); text-align:right;}
+  .callout{background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:.8rem 1rem; margin:.8rem 0; font-size:.92rem;}
+  .matline{display:flex; align-items:center; gap:.55rem; padding:.28rem 0; border-bottom:1px dotted var(--line-soft); font-size:.92rem;}
+  .matline:last-child{border-bottom:0;}
+  .matline .dot{width:15px; height:15px; border-radius:50%; box-shadow:0 0 0 1px var(--line); flex:none;}
+  .matline .m{margin-left:auto; font-family:var(--font-mono); font-size:.85rem; color:var(--ink-soft); white-space:nowrap;}
+
+  .foot{margin-top:1.4rem; color:var(--muted); font-size:.78rem; text-align:center;}
+  .foot .heart{color:var(--accent);}
+  .toast{position:fixed; left:50%; bottom:1.3rem; transform:translateX(-50%) translateY(1rem); background:var(--ink);
+    color:#fff; padding:.6rem 1rem; border-radius:9px; font-size:.86rem; opacity:0; pointer-events:none; transition:.25s; z-index:50;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .print-only{display:none;}
+
+  @media print{
+    :root{--paper:#fff; --panel:#fff; --surface:#fff; --inset:#f1ece1; --line:#c8bca2; --line-soft:#e0d6c2; --ink:#241a0d; --ink-soft:#4a3d29;}
+    @page{size:A4; margin:15mm;}
+    body{background:#fff; font-size:11.5pt;}
+    .app{max-width:none; padding:0;}
+    .no-print,.top,.grid > .col-controls,.saved-card,.readout,.foot,.toast{display:none !important;}
+    .grid{display:block;}
+    .preview-wrap{position:static;}
+    figure.preview{border:1px solid #c8bca2; page-break-inside:avoid; max-width:15cm; margin:0 auto 8mm;}
+    .pattern{border:0; padding:0;}
+    .print-only{display:block;}
+    .pattern section{break-inside:avoid;}
+  }
+</style>
+
+<div class="app">
+  <div class="top no-print">
+    <div class="brand">
+      <p class="eyebrow">Estudio de patrones · ganchillo</p>
+      <h1>Diseña tu Chal</h1>
+      <p>Elige talla y colores, añade los flecos que quieras y guarda cada diseño. Cuando te guste, pulsa
+        <b>Imprimir / PDF</b> y tendrás el patrón listo para tejer. Funciona sin internet.</p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btnNew">✨ Nuevo</button>
+      <button class="btn ghost" id="btnExport">⬇︎ Exportar</button>
+      <button class="btn ghost" id="btnImport">⬆︎ Importar</button>
+      <button class="btn primary" id="btnPrint">🖨️ Imprimir / PDF</button>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- ============ CONTROLES ============ -->
+    <div class="col-controls">
+      <div class="card">
+        <h2><span class="num">1</span> Talla</h2>
+        <p class="hint">Elige una talla o pon la envergadura exacta (lo que mide de punta a punta arriba).</p>
+        <div class="seg" id="segSize"></div>
+        <div class="field" id="customSizeWrap" hidden>
+          <label>Envergadura a medida</label>
+          <div class="inline">
+            <input type="number" id="wingspan" min="60" max="240" step="1">
+            <span class="unit">cm de ancho arriba</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Grosor de aguja (ganchillo)</label>
+          <div class="seg" id="segHook"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">2</span> Colores</h2>
+        <p class="hint">Toca un color o crea el tuyo. Cualquier combinación vale.</p>
+        <div class="field">
+          <label>Color del cuerpo (la red)</label>
+          <div class="swatches" id="swBody"></div>
+          <div class="colorpick">
+            <input type="color" id="pickBody"><span class="colorname" id="nameBody"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Color de los flecos</label>
+          <div class="swatches" id="swFringe"></div>
+          <div class="colorpick">
+            <input type="color" id="pickFringe"><span class="colorname" id="nameFringe"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">3</span> Flecos</h2>
+        <p class="hint">Los flecos base van por los dos lados en diagonal.</p>
+        <div class="field">
+          <label>Densidad de los flecos base</label>
+          <div class="seg" id="segDensity"></div>
+        </div>
+        <div class="field">
+          <label>Largo del fleco terminado</label>
+          <div class="inline">
+            <input type="number" id="fringeLen" min="8" max="45" step="1">
+            <span class="unit">cm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Añadidos <span class="unit">(flecos extra donde quieras)</span></label>
+          <div id="addonList"></div>
+          <button class="btn sm" id="btnAddon">➕ Añadir flecos</button>
+        </div>
+      </div>
+
+      <div class="card saved-card">
+        <h2><span class="num">4</span> Tus diseños</h2>
+        <p class="hint">Guarda este diseño con un nombre para volver a él cuando quieras.</p>
+        <div class="field">
+          <div class="row">
+            <input type="text" id="designName" placeholder="p. ej. Chal de la abuela" style="flex:1;">
+            <button class="btn primary" id="btnSave">💾 Guardar</button>
+          </div>
+        </div>
+        <div class="saved-list" id="savedList"></div>
+      </div>
+    </div>
+
+    <!-- ============ PREVISUALIZACIÓN + PATRÓN ============ -->
+    <div class="preview-wrap">
+      <figure class="preview">
+        <div id="previewSvg"></div>
+        <div class="readout" id="readout"></div>
+      </figure>
+
+      <div class="pattern" id="pattern" style="margin-top:1.1rem;">
+        <!-- generado por JS -->
+      </div>
+    </div>
+  </div>
+
+  <p class="foot no-print">Hecho con <span class="heart">♥</span> · un estudio de patrones que cabe en una página · tus diseños se guardan solo en este dispositivo</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s,r){return (r||document).querySelector(s);};
+  var el = function(t,a,h){var e=document.createElement(t); if(a)for(var k in a)e.setAttribute(k,a[k]); if(h!=null)e.innerHTML=h; return e;};
+
+  // ---------- datos ----------
+  var PALETTE = [
+    {hex:"#b5793f", name:"Camel"}, {hex:"#8a5a2b", name:"Caramelo"}, {hex:"#d69a2a", name:"Mostaza"},
+    {hex:"#e9dcc2", name:"Crudo"}, {hex:"#f4efe6", name:"Blanco roto"}, {hex:"#b45a3c", name:"Terracota"},
+    {hex:"#cf9aa0", name:"Rosa palo"}, {hex:"#6e2f3a", name:"Burdeos"}, {hex:"#7d7a45", name:"Verde oliva"},
+    {hex:"#4a6b57", name:"Verde salvia"}, {hex:"#33455f", name:"Azul marino"}, {hex:"#b9b3a8", name:"Gris perla"},
+    {hex:"#5a3d2b", name:"Chocolate"}, {hex:"#2b2b2b", name:"Negro"}
+  ];
+  var HOOKS = [
+    {mm:4.0, archW:2.2, rowH:2.0, label:"4,0 mm", sub:"tupido"},
+    {mm:4.5, archW:2.5, rowH:2.2, label:"4,5 mm", sub:"recomendado"},
+    {mm:5.0, archW:2.8, rowH:2.5, label:"5,0 mm", sub:"más calado"}
+  ];
+  var PRESETS = [
+    {key:"s", label:"Pequeño", sub:"~115 cm · hombros", wingspan:115},
+    {key:"m", label:"Estándar", sub:"~155 cm · adulto", wingspan:155},
+    {key:"l", label:"Grande", sub:"~185 cm · envolvente", wingspan:185},
+    {key:"custom", label:"A medida", sub:"tú eliges", wingspan:null}
+  ];
+  var ZONAS = [
+    {v:"orilla", t:"Toda la orilla inferior (los 2 lados)"},
+    {v:"izq", t:"Solo el lado izquierdo"},
+    {v:"der", t:"Solo el lado derecho"},
+    {v:"punta", t:"Solo la punta"},
+    {v:"arriba", t:"Borde superior (hombros)"}
+  ];
+
+  // ---------- estado ----------
+  var state = null;
+  function defaultState(){
+    return { name:"", hookMm:4.5, sizeKey:"m", wingspan:155, bodyColor:"#b5793f",
+      fringeColor:"#e9dcc2", density:1, fringeLen:28, strands:6, addons:[] };
+  }
+  function colorName(hex){
+    hex=(hex||"").toLowerCase();
+    for(var i=0;i<PALETTE.length;i++){ if(PALETTE[i].hex.toLowerCase()===hex) return PALETTE[i].name; }
+    return "Personalizado";
+  }
+
+  // ---------- motor del patrón (matemáticas verificadas) ----------
+  function hook(){ for(var i=0;i<HOOKS.length;i++) if(HOOKS[i].mm===state.hookMm) return HOOKS[i]; return HOOKS[1]; }
+  function rowsForWingspan(W){ var h=hook(); var n=Math.round((W/h.archW - 1)/2); return Math.max(8, n); }
+  function engine(){
+    var h=hook();
+    var W = state.sizeKey==="custom" ? state.wingspan : (function(){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i].key===state.sizeKey)return PRESETS[i].wingspan;}())||155;
+    var n = rowsForWingspan(W);
+    var arcs = 2*n+1;
+    var wing = +(arcs*h.archW).toFixed(0);
+    var depth = +(n*h.rowH).toFixed(0);
+    var edgePerSide = n;                 // arcos de borde por cada lado en diagonal
+    // hilo cuerpo
+    var totalArcs = n*(n+2);
+    var bodyM = totalArcs*0.105;         // ~0,105 m de hilo por arco
+    var bodyMin = Math.ceil(bodyM/10)*10;
+    var bodyMax = Math.ceil(bodyM*1.3/10)*10;
+    // flecos base
+    var perBundleM = state.strands * (state.fringeLen*2/100 + 0.05); // largo de corte = 2x el fleco + nudo
+    var baseBundles = edgePerSide*2*state.density + 1;               // +1 en la punta
+    return { h:h, W:W, n:n, arcs:arcs, wing:wing, depth:depth, edgePerSide:edgePerSide,
+      totalArcs:totalArcs, bodyMin:bodyMin, bodyMax:bodyMax, perBundleM:perBundleM,
+      baseBundles:baseBundles, cutLen:Math.round(state.fringeLen*2+5) };
+  }
+  function addonBundles(){ // agrupa añadidos por color -> {color: bundles}
+    var map={}; state.addons.forEach(function(a){ var q=Math.max(0,parseInt(a.qty,10)||0); if(!q)return;
+      map[a.color]=(map[a.color]||0)+q; }); return map;
+  }
+
+  // ---------- previsualización SVG ----------
+  function fringeAlong(x1,y1,x2,y2,count,color,dir){
+    // dir: {dx,dy} longitud de caída del fleco
+    var s=""; count=Math.max(1,Math.min(count,16));
+    for(var i=0;i<count;i++){
+      var t=(i+0.5)/count; var x=x1+(x2-x1)*t, y=y1+(y2-y1)*t;
+      s+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(x+dir.dx).toFixed(1)+'" y2="'+(y+dir.dy).toFixed(1)+'" stroke="'+color+'" stroke-width="3.4" stroke-linecap="round" opacity="0.92"/>';
+    }
+    return s;
+  }
+  function renderPreview(){
+    var e=engine();
+    var A={x:52,y:70}, B={x:348,y:70}, P={x:200,y:298}; // triángulo
+    var body=state.bodyColor, fringe=state.fringeColor;
+    var svg='';
+    svg+='<svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista previa del chal">';
+    svg+='<defs><pattern id="mesh" width="15" height="15" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">';
+    svg+='<rect width="15" height="15" fill="'+body+'"/><path d="M0 0H15M0 0V15" stroke="rgba(255,255,255,.28)" stroke-width="1.4"/></pattern></defs>';
+    svg+='<rect width="400" height="360" fill="#fbf9f4"/>';
+    // flecos base (bajo la orilla)
+    svg+=fringeAlong(A.x,A.y,P.x,P.y, e.edgePerSide*state.density, fringe, {dx:-6,dy:34});
+    svg+=fringeAlong(B.x,B.y,P.x,P.y, e.edgePerSide*state.density, fringe, {dx:6,dy:34});
+    svg+='<line x1="200" y1="298" x2="200" y2="338" stroke="'+fringe+'" stroke-width="3.4" stroke-linecap="round"/>';
+    // añadidos
+    state.addons.forEach(function(a){
+      var q=parseInt(a.qty,10)||0; if(!q)return; var c=a.color;
+      if(a.zona==="izq"||a.zona==="orilla") svg+=fringeAlong(A.x,A.y,P.x,P.y,q,c,{dx:-11,dy:40});
+      if(a.zona==="der"||a.zona==="orilla") svg+=fringeAlong(B.x,B.y,P.x,P.y,q,c,{dx:11,dy:40});
+      if(a.zona==="punta") svg+=fringeAlong(P.x-14,P.y+4,P.x+14,P.y+4,Math.min(q,6),c,{dx:0,dy:46});
+      if(a.zona==="arriba") svg+=fringeAlong(A.x,A.y,B.x,B.y,q,c,{dx:0,dy:-30});
+    });
+    // cuerpo
+    svg+='<polygon points="'+A.x+','+A.y+' '+B.x+','+B.y+' '+P.x+','+P.y+'" fill="url(#mesh)" stroke="'+shade(body,-30)+'" stroke-width="2.5"/>';
+    svg+='</svg>';
+    $("#previewSvg").innerHTML=svg;
+
+    var r=$("#readout");
+    r.innerHTML='<span><b>'+e.wing+'</b> cm ancho</span><span><b>'+e.depth+'</b> cm alto</span>'+
+      '<span><b>'+e.n+'</b> vueltas</span><span><b>'+e.arcs+'</b> arcos</span>'+
+      '<span><b>'+(e.baseBundles+ Object.values(addonBundles()).reduce(function(x,y){return x+y;},0))+'</b> flecos</span>';
+  }
+  function shade(hex,amt){
+    var c=hex.replace('#',''); if(c.length===3)c=c.replace(/(.)/g,'$1$1');
+    var n=parseInt(c,16); var R=Math.max(0,Math.min(255,(n>>16)+amt)),G=Math.max(0,Math.min(255,((n>>8)&255)+amt)),Bl=Math.max(0,Math.min(255,(n&255)+amt));
+    return '#'+(1<<24|R<<16|G<<8|Bl).toString(16).slice(1);
+  }
+
+  // ---------- patrón escrito ----------
+  function fmtColor(hex){ return '<span class="matline"><span class="dot" style="background:'+hex+'"></span>'; }
+  function renderPattern(){
+    var e=engine();
+    var p=$("#pattern");
+    var name = state.name || "Chal Triangular de Red con Flecos";
+    var bodyN=colorName(state.bodyColor), fringeN=colorName(state.fringeColor);
+    var ao=addonBundles();
+    var html='';
+    html+='<div class="print-only" style="font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7c4f24;margin-bottom:.3rem;">Patrón de ganchillo · hecho con Diseña tu Chal</div>';
+    html+='<h2 class="title">'+esc(name)+'</h2>';
+    html+='<p class="sub">Chal triangular en punto de arcos · talla '+e.wing+'×'+e.depth+' cm · aguja '+e.h.label+'</p>';
+
+    // medidas + materiales
+    html+='<section><h3>Materiales</h3>';
+    html+='<div class="matlist">';
+    html+=fmtColor(state.bodyColor)+'Hilo del cuerpo · <b>'+esc(bodyN)+'</b> <span class="m">~'+e.bodyMin+'–'+e.bodyMax+' m</span></span>';
+    // flecos base metros
+    var baseM=Math.ceil(e.baseBundles*e.perBundleM/10)*10;
+    html+=fmtColor(state.fringeColor)+'Hilo de flecos · <b>'+esc(fringeN)+'</b> <span class="m">~'+baseM+' m ('+e.baseBundles+' flecos)</span></span>';
+    Object.keys(ao).forEach(function(c){
+      var m=Math.ceil(ao[c]*e.perBundleM/10)*10;
+      html+=fmtColor(c)+'Flecos añadidos · <b>'+esc(colorName(c))+'</b> <span class="m">~'+m+' m ('+ao[c]+' flecos)</span></span>';
+    });
+    html+='</div>';
+    html+='<p style="font-size:.85rem;color:var(--ink-soft);margin-top:.6rem">Aguja de ganchillo <b>'+e.h.label+'</b>, aguja lanera, tijeras, marcador de vueltas y un cepillo si quieres flecos peludos. Cantidades de hilo <i>aproximadas</i>: compra siempre con un poco de margen.</p>';
+    html+='</section>';
+
+    // muestra + abreviaturas
+    html+='<section><h3>Muestra y abreviaturas</h3>';
+    html+='<p><b>Muestra</b> (aguja '+e.h.label+'): 1 arco ≈ '+e.h.archW.toString().replace('.',',')+' cm · 1 vuelta ≈ '+e.h.rowH.toString().replace('.',',')+' cm. Teje flojo, buscamos caída.</p>';
+    html+='<p style="font-size:.9rem"><code>cad</code> cadeneta · <code>pb</code> punto bajo (US sc / UK dc) · <code>pr</code> punto raso · <b>arco</b> = 5 cadenetas sujetas con 1 pb · <code>(n)</code> arcos al final de la vuelta.</p>';
+    html+='</section>';
+
+    // cuerpo
+    html+='<section><h3>Cuerpo · de la punta hacia arriba</h3>';
+    html+='<p><b>Inicio:</b> <code>cad 6</code>, cierra en anillo con <code>pr</code>. <b>V1:</b> <code>cad 1</code>, y en el anillo <code>pb, (cad 5, pb) × 3</code>. Gira. <b>(3 arcos)</b></p>';
+    html+='<div class="callout"><b>Vuelta de aumento</b> (repite en cada vuelta): gira, <code>cad 5, pb</code> en el 1.º arco; <code>cad 5, pb</code> otra vez en el 1.º arco; <code>*cad 5, pb en el siguiente arco*</code> hasta el último; <code>cad 5, pb</code> otra vez en el último arco. <b>(+2 arcos)</b></div>';
+    html+='<p>Sigue aumentando hasta la <b>vuelta '+e.n+'</b>, que tendrá <b>'+e.arcs+' arcos</b> ('+e.wing+' cm de ancho). Fórmula: la vuelta <i>n</i> tiene <code>(2n+1)</code> arcos.</p>';
+    html+='</section>';
+
+    // bordes
+    html+='<section><h3>Bordes</h3><ul>';
+    html+='<li><b>Borde superior:</b> 1 vuelta de <code>pb</code> (2 pb por arco, 1 cad entre arcos) para que no se dé de sí.</li>';
+    html+='<li><b>Lados en diagonal:</b> puedes anudar los flecos directamente, o hacer antes 1 vuelta de <code>pb</code> por lado para un borde marcado.</li></ul></section>';
+
+    // flecos
+    html+='<section><h3>Flecos</h3>';
+    html+='<p><b>Base:</b> corta hebras de <b>~'+e.cutLen+' cm</b> ('+state.strands+' hebras por fleco). Con el ganchillo, pasa el bucle doblado por el arco del borde, mete las puntas y aprieta (nudo de alondra). Coloca <b>'+(state.density>1?'2 flecos por arco':'1 fleco por arco')+'</b> en los dos lados → <b>'+e.baseBundles+' flecos</b> en '+esc(fringeN)+'.</p>';
+    if(state.addons.filter(function(a){return (parseInt(a.qty,10)||0)>0;}).length){
+      html+='<p><b>Añadidos:</b></p><ul>';
+      state.addons.forEach(function(a){ var q=parseInt(a.qty,10)||0; if(!q)return;
+        html+='<li><b>'+q+' flecos</b> en <b>'+esc(zonaText(a.zona))+'</b>, color '+esc(colorName(a.color))+' <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+a.color+';box-shadow:0 0 0 1px var(--line);vertical-align:middle"></span></li>';
+      });
+      html+='</ul>';
+    }
+    html+='<p style="font-size:.85rem;color:var(--ink-soft)">Para el efecto peludo: usa alpaca cepillada o mohair y cepilla los flecos al terminar. Recorta parejo.</p>';
+    html+='</section>';
+
+    // acabado
+    html+='<section><h3>Acabado</h3><ul><li>Esconde las hebras.</li><li>Bloquea el cuerpo con vapor sin apoyar (abre la red); no aplastes los flecos.</li><li>Cepilla y recorta los flecos.</li></ul></section>';
+
+    p.innerHTML=html;
+  }
+  function zonaText(v){ for(var i=0;i<ZONAS.length;i++) if(ZONAS[i].v===v) return ZONAS[i].t.toLowerCase(); return v; }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  // ---------- construir controles ----------
+  function buildSize(){
+    var seg=$("#segSize"); seg.innerHTML='';
+    PRESETS.forEach(function(pr){
+      var b=el('button',{type:'button','data-k':pr.key},'<b>'+pr.label+'</b><small>'+pr.sub+'</small>');
+      b.addEventListener('click',function(){ state.sizeKey=pr.key; if(pr.key!=='custom'&&pr.wingspan)state.wingspan=pr.wingspan; syncSize(); update(); });
+      seg.appendChild(b);
+    });
+    var seh=$("#segHook"); seh.innerHTML='';
+    HOOKS.forEach(function(hk){
+      var b=el('button',{type:'button','data-mm':hk.mm},'<b>'+hk.label+'</b><small>'+hk.sub+'</small>');
+      b.addEventListener('click',function(){ state.hookMm=hk.mm; syncSize(); update(); });
+      seh.appendChild(b);
+    });
+    var sd=$("#segDensity"); sd.innerHTML='';
+    [{v:1,t:'Normal',s:'1 por arco'},{v:2,t:'Tupido',s:'2 por arco'}].forEach(function(d){
+      var b=el('button',{type:'button','data-d':d.v},'<b>'+d.t+'</b><small>'+d.s+'</small>');
+      b.addEventListener('click',function(){ state.density=d.v; syncSize(); update(); });
+      sd.appendChild(b);
+    });
+  }
+  function syncSize(){
+    Array.prototype.forEach.call($("#segSize").children,function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-k')===state.sizeKey); });
+    Array.prototype.forEach.call($("#segHook").children,function(b){ b.setAttribute('aria-pressed', parseFloat(b.getAttribute('data-mm'))===state.hookMm); });
+    Array.prototype.forEach.call($("#segDensity").children,function(b){ b.setAttribute('aria-pressed', parseInt(b.getAttribute('data-d'),10)===state.density); });
+    $("#customSizeWrap").hidden = state.sizeKey!=='custom';
+    $("#wingspan").value=state.wingspan;
+    $("#fringeLen").value=state.fringeLen;
+  }
+  function buildSwatches(container, get, set){
+    container.innerHTML='';
+    PALETTE.forEach(function(c){
+      var b=el('button',{type:'button','class':'swatch',title:c.name,'aria-label':c.name});
+      b.style.background=c.hex;
+      b.addEventListener('click',function(){ set(c.hex); update(); });
+      container.appendChild(b);
+    });
+  }
+  function syncColors(){
+    Array.prototype.forEach.call($("#swBody").children,function(b,i){ b.setAttribute('aria-pressed', PALETTE[i].hex.toLowerCase()===state.bodyColor.toLowerCase()); });
+    Array.prototype.forEach.call($("#swFringe").children,function(b,i){ b.setAttribute('aria-pressed', PALETTE[i].hex.toLowerCase()===state.fringeColor.toLowerCase()); });
+    $("#pickBody").value=hex6(state.bodyColor); $("#nameBody").textContent=colorName(state.bodyColor)+' · '+state.bodyColor;
+    $("#pickFringe").value=hex6(state.fringeColor); $("#nameFringe").textContent=colorName(state.fringeColor)+' · '+state.fringeColor;
+  }
+  function hex6(h){ h=h.replace('#',''); if(h.length===3)h=h.replace(/(.)/g,'$1$1'); return '#'+h; }
+
+  // ---------- añadidos ----------
+  function renderAddons(){
+    var list=$("#addonList"); list.innerHTML='';
+    if(!state.addons.length){ list.appendChild(el('div',{'class':'addon-empty'},'Sin añadidos. Pulsa “Añadir flecos” para poner extra en una zona.')); return; }
+    state.addons.forEach(function(a,idx){
+      var row=el('div',{'class':'addon'});
+      var q=el('input',{type:'number',min:'1',max:'120',value:a.qty,'aria-label':'cantidad'});
+      q.addEventListener('input',function(){ a.qty=q.value; update(); });
+      var sel=el('select',{'aria-label':'zona'});
+      ZONAS.forEach(function(z){ var o=el('option',{value:z.v},z.t); if(z.v===a.zona)o.selected=true; sel.appendChild(o); });
+      sel.addEventListener('change',function(){ a.zona=sel.value; update(); });
+      var col=el('input',{type:'color','class':'mini-color','aria-label':'color'}); col.value=hex6(a.color);
+      col.addEventListener('input',function(){ a.color=col.value; update(); });
+      var del=el('button',{type:'button','class':'del',title:'Quitar','aria-label':'quitar'},'✕');
+      del.addEventListener('click',function(){ state.addons.splice(idx,1); update(); });
+      row.appendChild(q); row.appendChild(sel); row.appendChild(col); row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  // ---------- guardar / cargar ----------
+  var LS='chalDesigns.v1';
+  function loadStore(){ try{ return JSON.parse(localStorage.getItem(LS)||'[]'); }catch(e){ return []; } }
+  function saveStore(a){ try{ localStorage.setItem(LS, JSON.stringify(a)); }catch(e){} }
+  function renderSaved(){
+    var wrap=$("#savedList"); wrap.innerHTML=''; var arr=loadStore();
+    if(!arr.length){ wrap.appendChild(el('div',{'class':'addon-empty'},'Aún no has guardado ningún diseño.')); return; }
+    arr.forEach(function(d,i){
+      var chip=el('div',{'class':'chip'});
+      chip.appendChild(el('span',{'class':'dot',style:'background:'+d.bodyColor}));
+      var load=el('button',{'class':'load',title:'Cargar'}, esc(d.name||'(sin nombre)'));
+      load.addEventListener('click',function(){ state=Object.assign(defaultState(),d); state.addons=(d.addons||[]).map(function(x){return Object.assign({},x);}); syncAll(); update(); toast('Diseño cargado'); });
+      var del=el('button',{title:'Borrar'},'🗑');
+      del.addEventListener('click',function(){ var s=loadStore(); s.splice(i,1); saveStore(s); renderSaved(); toast('Diseño borrado'); });
+      chip.appendChild(load); chip.appendChild(del); wrap.appendChild(chip);
+    });
+  }
+
+  // ---------- util ----------
+  var toastT;
+  function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove('show');},1800); }
+
+  function syncAll(){ syncSize(); syncColors(); renderAddons(); $("#designName").value=state.name||''; }
+  function update(){ renderPreview(); renderPattern(); }
+
+  // ---------- eventos globales ----------
+  function bind(){
+    $("#wingspan").addEventListener('input',function(){ state.wingspan=Math.max(60,Math.min(240,parseInt(this.value,10)||155)); update(); });
+    $("#fringeLen").addEventListener('input',function(){ state.fringeLen=Math.max(8,Math.min(45,parseInt(this.value,10)||28)); update(); });
+    $("#pickBody").addEventListener('input',function(){ state.bodyColor=this.value; syncColors(); update(); });
+    $("#pickFringe").addEventListener('input',function(){ state.fringeColor=this.value; syncColors(); update(); });
+    $("#btnAddon").addEventListener('click',function(){ state.addons.push({qty:10, zona:'punta', color:state.fringeColor}); renderAddons(); update(); });
+    $("#designName").addEventListener('input',function(){ state.name=this.value; renderPattern(); });
+    $("#btnSave").addEventListener('click',function(){
+      if(!state.name){ state.name=$("#designName").value||('Diseño '+(loadStore().length+1)); }
+      var arr=loadStore(); var snap=JSON.parse(JSON.stringify(state));
+      var ix=arr.findIndex(function(d){return d.name===snap.name;});
+      if(ix>=0)arr[ix]=snap; else arr.push(snap);
+      saveStore(arr); renderSaved(); toast(ix>=0?'Diseño actualizado':'Diseño guardado ✓');
+    });
+    $("#btnNew").addEventListener('click',function(){ state=defaultState(); syncAll(); update(); toast('Diseño nuevo'); });
+    $("#btnPrint").addEventListener('click',function(){ window.print(); });
+    $("#btnExport").addEventListener('click',function(){
+      var data=JSON.stringify({app:'disena-tu-chal', designs:loadStore(), actual:state}, null, 2);
+      var blob=new Blob([data],{type:'application/json'}); var url=URL.createObjectURL(blob);
+      var a=el('a',{href:url, download:'mis-chales.json'}); document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Exportado');
+    });
+    $("#btnImport").addEventListener('click',function(){ $("#fileImport").click(); });
+    $("#fileImport").addEventListener('change',function(ev){
+      var f=ev.target.files[0]; if(!f)return; var rd=new FileReader();
+      rd.onload=function(){ try{ var o=JSON.parse(rd.result); if(o.designs){ saveStore(o.designs); renderSaved(); } if(o.actual){ state=Object.assign(defaultState(),o.actual); syncAll(); update(); } toast('Importado ✓'); }catch(e){ toast('Archivo no válido'); } };
+      rd.readAsText(f); ev.target.value='';
+    });
+  }
+
+  // ---------- init ----------
+  state=defaultState();
+  buildSize();
+  buildSwatches($("#swBody"), function(){return state.bodyColor;}, function(v){state.bodyColor=v;});
+  buildSwatches($("#swFringe"), function(){return state.fringeColor;}, function(v){state.fringeColor=v;});
+  bind(); syncAll(); renderSaved(); update();
+})();
+</script>
+</html>
