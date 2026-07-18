@@ -1,5 +1,6 @@
-/* Service worker — cache-first para que la app funcione sin internet */
-var CACHE = 'taller-v1';
+/* Service worker v3 — "network-first" para el HTML (así siempre se ve la última
+   versión cuando hay internet) y cache para funcionar sin conexión. */
+var CACHE = 'taller-v3';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function (e) {
@@ -12,13 +13,30 @@ self.addEventListener('activate', function (e) {
 });
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(function (r) {
-      return r || fetch(e.request).then(function (resp) {
+  var req = e.request;
+  var accept = req.headers.get('accept') || '';
+  var isHTML = req.mode === 'navigate' || accept.indexOf('text/html') >= 0;
+  if (isHTML) {
+    // network-first: pide la versión nueva; si no hay internet, usa la copia guardada
+    e.respondWith(
+      fetch(req).then(function (resp) {
         var cp = resp.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, cp); });
+        caches.open(CACHE).then(function (c) { c.put(req, cp); });
         return resp;
-      }).catch(function () { return caches.match('./index.html'); });
-    })
-  );
+      }).catch(function () {
+        return caches.match(req).then(function (r) { return r || caches.match('./index.html'); });
+      })
+    );
+  } else {
+    // el resto (iconos, manifest): cache-first, que no cambian
+    e.respondWith(
+      caches.match(req).then(function (r) {
+        return r || fetch(req).then(function (resp) {
+          var cp = resp.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, cp); });
+          return resp;
+        });
+      })
+    );
+  }
 });

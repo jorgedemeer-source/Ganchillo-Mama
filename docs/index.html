@@ -119,6 +119,14 @@
   .symcell svg{flex:none; background:#fff; border-radius:5px;}
   .matline{display:flex; align-items:center; gap:.5rem; padding:.26rem 0; border-bottom:1px dotted var(--line-soft); font-size:.9rem;} .matline:last-child{border-bottom:0;}
   .matline .dot{width:15px;height:15px;border-radius:50%;box-shadow:0 0 0 1px var(--line);flex:none;} .matline .m{margin-left:auto; font-family:var(--fm); font-size:.82rem; color:var(--ink-soft); white-space:nowrap;}
+  .pattern details.fold{border:1px solid var(--line); border-radius:9px; margin:.7rem 0; background:var(--surface); overflow:hidden;}
+  .pattern details.fold>summary{cursor:pointer; list-style:none; padding:.65rem .85rem; font-family:var(--fm); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--accent-deep); font-weight:600; display:flex; align-items:center; gap:.5rem;}
+  .pattern details.fold>summary::-webkit-details-marker{display:none;}
+  .pattern details.fold>summary::before{content:"▸"; color:var(--accent);}
+  .pattern details.fold[open]>summary::before{content:"▾";}
+  .pattern details.fold>summary::after{content:"toca para abrir"; margin-left:auto; font-size:.62rem; letter-spacing:.02em; text-transform:none; color:var(--muted); font-weight:400;}
+  .pattern details.fold[open]>summary::after{content:"";}
+  .pattern details.fold .foldbody{padding:0 .85rem .75rem;} .pattern details.fold .foldbody>*:first-child{margin-top:0;}
   .note{font-size:.82rem; color:var(--ink-soft);}
 
   .foot{margin-top:1.4rem; color:var(--muted); font-size:.76rem; text-align:center;} .foot .heart{color:var(--accent);}
@@ -132,6 +140,10 @@
     .app{max-width:none;padding:0;} .no-print,.top,.gtabs,#install,.col-controls,.readout,.foot,.toast{display:none !important;}
     .grid{display:block;} .preview-wrap{position:static;} figure.preview{max-width:14cm;margin:0 auto 8mm;}
     .pattern{border:0;padding:0;} .print-only{display:block;}
+    .pattern details.fold{border:0 !important; background:none !important; margin:1.05rem 0;}
+    .pattern details.fold>summary{padding:0 0 .28rem; border-bottom:1px solid var(--line-soft); list-style:none;}
+    .pattern details.fold>summary::after{content:"" !important;} .pattern details.fold>summary::before{content:"" !important;}
+    .pattern details.fold .foldbody{padding:0;} .pattern details:not([open])>.foldbody{display:block !important;}
   }
 </style>
 </head>
@@ -695,7 +707,8 @@
   function renderPattern(r){ var p=$("#pattern"); var name=app.name|| r.title; var h='';
     h+='<div class="print-only" style="font-family:var(--fm);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7c4f24;margin-bottom:.3rem;">Patrón de ganchillo · Mi Taller</div>';
     h+='<h2 class="title">'+esc(name)+'</h2><p class="psub">'+esc(r.psub)+'</p>';
-    r.sections.forEach(function(sec){ h+='<section><h3>'+esc(sec.h)+'</h3>'+sec.html+'</section>'; });
+    var FOLD={"Muestra y abreviaturas":1,"Puntos y técnicas paso a paso":1,"Detalle de encaje en la punta (opcional)":1,"Cuidado y lavado":1,"Consejos y errores comunes":1};
+    r.sections.forEach(function(sec){ if(FOLD[sec.h]){ h+='<details class="fold"><summary>'+esc(sec.h)+'</summary><div class="foldbody">'+sec.html+'</div></details>'; } else { h+='<section><h3>'+esc(sec.h)+'</h3>'+sec.html+'</section>'; } });
     p.innerHTML=h; }
 
   // ---------- guardar / cargar ----------
@@ -727,7 +740,11 @@
   // ---------- init ----------
   try{
     initStates(); buildTabs(); syncTabs(); buildControls(); bind(); renderSaved(); update(); setView(); showInstallHint();
-    try{ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(function(){}); } }catch(_){}
+    try{ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+      var hadCtrl=!!navigator.serviceWorker.controller, reloaded=false;
+      navigator.serviceWorker.addEventListener('controllerchange',function(){ if(hadCtrl && !reloaded){ reloaded=true; location.reload(); } });
+      navigator.serviceWorker.register('sw.js').then(function(reg){ if(reg&&reg.update){ try{reg.update();}catch(_){} } }).catch(function(){});
+    } }catch(_){}
   }catch(err){ var b=document.getElementById('errbar'); if(b){ b.textContent='⚠️ No se pudo iniciar: '+err.message+'. Abre el enlace en Chrome o Safari.'; b.style.display='block'; } }
 })();
 </script>
