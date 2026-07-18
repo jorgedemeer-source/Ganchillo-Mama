@@ -302,7 +302,7 @@
       sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:tecnicaRed(arcCad)});
       sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('chal',s,{n:n,wing:wing})+'</div>'});
       return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
-        svg:s.tipo==="tri"? triSVG(s):rectSVG(s,ac,rows)};
+        svg:s.tipo==="tri"? triSVG(s,{W:wing,D:depth,FL:s.largoFleco}):rectSVG(s,{W:wing,H:depth,FL:s.largoFleco})};
     }
   };
 
@@ -362,7 +362,7 @@
       sections.push({h:"Cuidado y lavado",html:cuidado()});
       sections.push({h:"Consejos y errores comunes",html:(s.punto==='red'?consejosRed():consejosBasico())});
       sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('bufanda',s,{})+'</div>'});
-      return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s):cowlSVG(s)};
+      return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s,{W:W,H:H,FL:s.largoFleco}):cowlSVG(s,{C:W,H:H})};
     }
   };
 
@@ -416,7 +416,7 @@
       sections.push({h:"Cuidado y lavado",html:cuidado()});
       sections.push({h:"Consejos y errores comunes",html:consejosGorro()});
       sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('gorro',s,{})+'</div>'});
-      return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s)};
+      return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s,{C:Math.round(hatCirc),H:H})};
     }
   };
 
@@ -641,31 +641,39 @@
   function setView(){var glos=(app.current==='glosario');var gr=document.querySelector('.grid');if(gr)gr.style.display=glos?'none':'';var gl=$("#glossary");if(gl){gl.hidden=!glos;if(glos)renderGlossary();}}
 
   // ---------- previews SVG ----------
-  function meshDefs(id,body){return '<defs><pattern id="'+id+'" width="15" height="15" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="15" height="15" fill="'+body+'"/><path d="M0 0H15M0 0V15" stroke="rgba(255,255,255,.28)" stroke-width="1.3"/></pattern></defs>';}
+  function meshDefs(id,body,cell){cell=cell||15;return '<defs><pattern id="'+id+'" width="'+cell+'" height="'+cell+'" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="'+cell+'" height="'+cell+'" fill="'+body+'"/><path d="M0 0H'+cell+'M0 0V'+cell+'" stroke="rgba(255,255,255,.28)" stroke-width="1.3"/></pattern></defs>';}
   function fringeAlong(x1,y1,x2,y2,count,color,dx,dy){var s='';count=Math.max(1,Math.min(count,16));for(var i=0;i<count;i++){var t=(i+0.5)/count,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;s+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(x+dx).toFixed(1)+'" y2="'+(y+dy).toFixed(1)+'" stroke="'+color+'" stroke-width="3.2" stroke-linecap="round" opacity="0.9"/>';}return s;}
   function svgWrap(inner){return '<svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista previa"><rect width="400" height="360" fill="#fbf9f4"/>'+inner+'</svg>';}
-  function triSVG(s){var A={x:52,y:70},B={x:348,y:70},P={x:200,y:298};var i=meshDefs('mA',s.cuerpo);
-    i+=fringeAlong(A.x,A.y,P.x,P.y,(({s:23,m:31,l:37}[s.talla])||Math.round((( s.talla==="custom"?s.wingspan:155)/g(s.hook).archW-1)/2))*s.densidad,s.flecos,-6,34);
-    i+=fringeAlong(B.x,B.y,P.x,P.y,(({s:23,m:31,l:37}[s.talla])||20)*s.densidad,s.flecos,6,34);
-    i+='<line x1="200" y1="298" x2="200" y2="338" stroke="'+s.flecos+'" stroke-width="3.2" stroke-linecap="round"/>';
-    (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0;if(!q)return;var c=a.color;if(a.zona==="izq"||a.zona==="orilla")i+=fringeAlong(A.x,A.y,P.x,P.y,q,c,-11,40);if(a.zona==="der"||a.zona==="orilla")i+=fringeAlong(B.x,B.y,P.x,P.y,q,c,11,40);if(a.zona==="punta")i+=fringeAlong(P.x-14,P.y+4,P.x+14,P.y+4,Math.min(q,6),c,0,46);if(a.zona==="arriba")i+=fringeAlong(A.x,A.y,B.x,B.y,q,c,0,-30);});
-    i+='<polygon points="52,70 348,70 200,298" fill="url(#mA)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';return svgWrap(i);}
-  function rectSVG(s){var i=meshDefs('mR',s.cuerpo);var x=120,w=160,y=50,h=230;
-    if(s.largoFleco>0){i+=fringeAlong(x,y+h,x+w,y+h,10,s.flecos,0,34);}
-    i+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="url(#mR)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
-    if(s.largoFleco>0){i+=fringeAlong(x,y,x+w,y,10,s.flecos,0,-30);}return svgWrap(i);}
-  function scarfSVG(s){var i=meshDefs('mS',s.cuerpo);var x=155,w=90,y=30,h=270;
-    if(s.largoFleco>0)i+=fringeAlong(x,y+h,x+w,y+h,7,s.flecos,0,30);
-    i+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="url(#mS)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
-    if(s.largoFleco>0)i+=fringeAlong(x,y,x+w,y,7,s.flecos,0,-24);return svgWrap(i);}
-  function cowlSVG(s){var i=meshDefs('mC',s.cuerpo);
-    i+='<ellipse cx="200" cy="180" rx="120" ry="150" fill="none" stroke="url(#mC)" stroke-width="46"/>';
-    i+='<ellipse cx="200" cy="180" rx="120" ry="150" fill="none" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
-    i+='<ellipse cx="200" cy="180" rx="97" ry="127" fill="#fbf9f4" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="1.5"/>';return svgWrap(i);}
-  function hatSVG(s){var i=meshDefs('mH',s.cuerpo);
-    i+='<path d="M92 250 Q92 96 200 96 Q308 96 308 250 Z" fill="url(#mH)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
-    i+='<rect x="80" y="248" width="240" height="34" rx="14" fill="'+shade(s.cuerpo,-14)+'" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
-    if(s.pompon)i+='<circle cx="200" cy="84" r="26" fill="'+s.pomponColor+'" stroke="'+shade(s.pomponColor,-25)+'" stroke-width="1.5"/>';return svgWrap(i);}
+  function meshCell(s){return {cerrada:12,media:15,abierta:19}[s.abertura] || (s.punto==="pb"?10:(s.punto==="pa"?13:15));}
+  function triSVG(s,d){d=d||{};var Wc=d.W||155,Dc=d.D||68,FL=d.FL||0,cx=200,topY=56;
+    var sc=Math.min(1.7,310/Wc,270/(Dc+FL*0.95));var tw=Wc*sc,td=Dc*sc,fpx=Math.min(FL*sc,82);
+    var TL={x:cx-tw/2,y:topY},TR={x:cx+tw/2,y:topY},P={x:cx,y:topY+td};
+    var i=meshDefs('mA',s.cuerpo,meshCell(s));var cnt=Math.max(3,Math.min(16,Math.round(tw/22)*(s.densidad||1)));
+    if(FL>0){i+=fringeAlong(TL.x,TL.y,P.x,P.y,cnt,s.flecos,-fpx*0.12,fpx)+fringeAlong(TR.x,TR.y,P.x,P.y,cnt,s.flecos,fpx*0.12,fpx)+'<line x1="'+P.x+'" y1="'+P.y.toFixed(1)+'" x2="'+P.x+'" y2="'+(P.y+fpx).toFixed(1)+'" stroke="'+s.flecos+'" stroke-width="3.2" stroke-linecap="round"/>';}
+    (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0;if(!q)return;var c=a.color,fl2=Math.max(fpx,34);if(a.zona==="izq"||a.zona==="orilla")i+=fringeAlong(TL.x,TL.y,P.x,P.y,Math.min(q,16),c,-fl2*0.2,fl2*1.1);if(a.zona==="der"||a.zona==="orilla")i+=fringeAlong(TR.x,TR.y,P.x,P.y,Math.min(q,16),c,fl2*0.2,fl2*1.1);if(a.zona==="punta")i+=fringeAlong(P.x-12,P.y+2,P.x+12,P.y+2,Math.min(q,6),c,0,fl2*1.25);if(a.zona==="arriba")i+=fringeAlong(TL.x,TL.y,TR.x,TR.y,Math.min(q,16),c,0,-26);});
+    i+='<polygon points="'+TL.x.toFixed(0)+','+TL.y+' '+TR.x.toFixed(0)+','+TR.y+' '+P.x+','+P.y.toFixed(0)+'" fill="url(#mA)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';return svgWrap(i);}
+  function rectSVG(s,d){d=d||{};var Wc=d.W||70,Hc=d.H||150,FL=d.FL||0,cx=200,top=42;
+    var sc=Math.min(1.7,240/Wc,250/(Hc+FL*1.8));var w=Wc*sc,h=Hc*sc,fpx=Math.min(FL*sc,60);
+    var x=cx-w/2,y=top+(FL>0?fpx:0);var i=meshDefs('mR',s.cuerpo,meshCell(s));var cnt=Math.max(3,Math.min(14,Math.round(w/18)));
+    if(FL>0){i+=fringeAlong(x,y+h,x+w,y+h,cnt,s.flecos,0,fpx)+fringeAlong(x,y,x+w,y,cnt,s.flecos,0,-fpx);}
+    i+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" rx="4" fill="url(#mR)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';return svgWrap(i);}
+  function scarfSVG(s,d){d=d||{};var Wc=d.W||22,Hc=d.H||160,FL=d.FL||0,cx=200,top=26;
+    var sc=Math.min(1.6,150/Wc,278/(Hc+FL*2));var w=Wc*sc,h=Hc*sc,fpx=Math.min(FL*sc,42);
+    var x=cx-w/2,y=top+(FL>0?fpx:0);var i=meshDefs('mS',s.cuerpo,meshCell(s));var cnt=Math.max(3,Math.min(10,Math.round(w/12)));
+    if(FL>0){i+=fringeAlong(x,y+h,x+w,y+h,cnt,s.flecos,0,fpx)+fringeAlong(x,y,x+w,y,cnt,s.flecos,0,-fpx);}
+    i+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+w.toFixed(0)+'" height="'+h.toFixed(0)+'" rx="6" fill="url(#mS)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';return svgWrap(i);}
+  function cowlSVG(s,d){d=d||{};var C=d.C||130,H=d.H||30,cx=200,cy=180;
+    var rx=Math.max(55,Math.min(45+C*0.72,148)),ry=Math.min(rx*1.12,152),thick=Math.max(18,Math.min(16+H*1.0,86));
+    var innerRx=Math.max(14,rx-thick),innerRy=Math.max(12,ry-thick);var i=meshDefs('mC',s.cuerpo,meshCell(s));
+    i+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx.toFixed(0)+'" ry="'+ry.toFixed(0)+'" fill="none" stroke="url(#mC)" stroke-width="'+thick.toFixed(0)+'"/>';
+    i+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx.toFixed(0)+'" ry="'+ry.toFixed(0)+'" fill="none" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
+    i+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+innerRx.toFixed(0)+'" ry="'+innerRy.toFixed(0)+'" fill="#fbf9f4" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="1.5"/>';return svgWrap(i);}
+  function hatSVG(s,d){d=d||{};var C=d.C||52,H=d.H||21,cx=200;
+    var halfW=Math.max(78,Math.min(60+C*1.35,145)),domeTop=Math.max(92,Math.min(250-H*6.6,205));
+    var i=meshDefs('mH',s.cuerpo,meshCell(s));
+    i+='<path d="M'+(cx-halfW).toFixed(0)+' 250 C '+(cx-halfW).toFixed(0)+' '+domeTop.toFixed(0)+', '+(cx+halfW).toFixed(0)+' '+domeTop.toFixed(0)+', '+(cx+halfW).toFixed(0)+' 250 Z" fill="url(#mH)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
+    i+='<rect x="'+(cx-halfW-8).toFixed(0)+'" y="248" width="'+(2*halfW+16).toFixed(0)+'" height="34" rx="14" fill="'+shade(s.cuerpo,-14)+'" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
+    if(s.pompon)i+='<circle cx="'+cx+'" cy="'+(domeTop-16).toFixed(0)+'" r="24" fill="'+s.pomponColor+'" stroke="'+shade(s.pomponColor,-25)+'" stroke-width="1.5"/>';return svgWrap(i);}
 
   // ============================================================
   //  APP SHELL
