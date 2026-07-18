@@ -105,7 +105,8 @@
   .pattern code{font-family:var(--fm); font-size:.85em; background:var(--inset); padding:.05em .35em; border-radius:4px; color:var(--accent-deep);}
   .callout{background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:.75rem .95rem; margin:.75rem 0; font-size:.92rem;}
   .chartbox{overflow-x:auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:.6rem; margin:.4rem 0 .7rem;}
-  .chartbox svg{display:block; width:100%; height:auto; min-width:280px; max-width:520px; margin:0 auto;}
+  .chartbox svg{display:block; width:100%; height:auto; min-width:0; max-width:700px; margin:0 auto;}
+  .chartbox .hint{font-size:.76rem; color:var(--muted); text-align:center; margin:.2rem 0 0;}
   .legend{display:flex; flex-wrap:wrap; gap:.4rem .9rem; font-size:.82rem; color:var(--ink-soft); margin-top:.3rem;}
   .legend .lg{display:inline-flex; align-items:center; gap:.35rem;} .legend .lgs svg{display:block;}
   #glossary .card > h2{font-size:1.15rem;}
@@ -278,7 +279,8 @@
       sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor sin apoyar para abrir la red; no aplastes los flecos.</li><li>Cepilla y recorta los flecos parejos.</li></ul>'});
       var total=(s.tipo==="tri"?(edge*2*s.densidad+1):0)+addonTotal(s);
       measures.push(["flecos",total||"—"]);
-      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:netChart()+legRed()});
+      var diagKeyC='chal|'+s.tipo+'|'+(s.tipo==="tri"?n:(ac+'x'+rows));
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyC,function(){return (s.tipo==="tri"?netTriFull(n):netRectFull(ac,rows))+legRed();})});
       return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
         svg:s.tipo==="tri"? triSVG(s):rectSVG(s,ac,rows)};
     }
@@ -333,8 +335,9 @@
           '<p class="note">Se teje en redondo (tubo). Puedes doblarlo para llevarlo doble.</p>'});
       }
       sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor suave.</li>'+(s.tipo==="bufanda"&&s.largoFleco>0?'<li>Recorta los flecos parejos.</li>':'')+'</ul>'});
-      var diagH = s.punto==="red"?(netChart()+legRed()):(s.punto==="pa"?(gridChart(true)+legPA()):(gridChart(false)+legPB()));
-      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:diagH});
+      var diagKeyB='buf|'+s.tipo+'|'+s.punto+'|'+across+'x'+rows;
+      var diagH = cachedChart(diagKeyB,function(){return s.punto==="red"?(netRectFull(across,rows)+legRed()):(gridFull(across,rows,s.punto==="pa")+(s.punto==="pa"?legPA():legPB()));});
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:diagH});
       return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s):cowlSVG(s)};
     }
   };
@@ -383,7 +386,8 @@
       sections.push({h:"Cuerpo · sin aumentos",html:'<p>Teje <b>'+straight+' vueltas</b> de <code>'+st+'</code> sin aumentar, todas de '+targetSts+' puntos, hasta que el gorro mida ~'+H+' cm.</p>'});
       sections.push({h:"Ala / borde",html:'<p>Termina con <b>2 vueltas de pb</b> (o 4-5 si quieres doblar el ala). Remata con <code>pr</code> y esconde la hebra.</p>'});
       if(s.pompon) sections.push({h:"Pompón",html:'<p>Haz un pompón de ~8-9 cm con el hilo del pompón (con las manos o con un molde), átalo fuerte y cóselo a la copa. Recórtalo redondo.</p>'});
-      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:roundChart(startSts,isPA)+(isPA?legPA():legPB())});
+      var diagKeyG='gorro|'+s.punto+'|'+startSts+'|'+incRounds+'|'+straight;
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyG,function(){return roundFull(startSts,incRounds,straight,isPA)+(isPA?legPA():legPB());})});
       return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s)};
     }
   };
@@ -435,6 +439,40 @@
     var ly=20;rings.forEach(function(rg,ri){inner+='<circle cx="18" cy="'+(ly-4)+'" r="5" fill="'+((ri%2===0)?kD:kO)+'"/><text x="30" y="'+ly+'" font-size="12" fill="#2b2620">V'+(ri+1)+': '+rg[0]+' '+(isPA?'pa':'pb')+'</text>';ly+=20;});
     inner+='<text x="'+cx+'" y="'+(cy+150)+'" text-anchor="middle" font-size="11.5" fill="#7c4f24">se teje en redondo desde el centro (anillo mágico)</text>';
     return c_wrap(W,H,inner);}
+  // ===== DIAGRAMAS COMPLETOS (toda la prenda, no una muestra) =====
+  var _chartCache={key:null,html:null};
+  function cachedChart(key,gen){ if(_chartCache.key===key) return _chartCache.html; var h=gen(); _chartCache={key:key,html:h}; return h; }
+  function netTriFull(N){ N=Math.max(2,Math.min(N,44)); var CW=26,RH=24,X0=44,ov=3;
+    var W=X0*2+N*CW, cx=W/2, Y0=26+N*RH, H=Y0+40, inner='';
+    function px(c,r){return cx+(2*c-r)*(CW/2);} function py(r){return Y0-r*RH;}
+    for(var r=0;r<N;r++){var col=(r%2===0)?kD:kO;for(var c=0;c<=r;c++){var ax=px(c,r),ay=py(r);inner+=c_arc(ax,ay,px(c,r+1),py(r+1),RH*0.42,col,ov)+c_arc(ax,ay,px(c+1,r+1),py(r+1),RH*0.42,col,ov);}}
+    for(var r4=0;r4<=N;r4++)for(var c2=0;c2<=r4;c2++)inner+=c_x(px(c2,r4),py(r4),kD);
+    for(var r5=1;r5<=N;r5++) if(r5%2===0||N<=16) inner+='<text x="'+(px(0,r5)-16)+'" y="'+(py(r5)+4)+'" font-size="10" font-weight="700" fill="'+((r5%2)?kD:kO)+'">'+r5+'</text>';
+    inner+='<text x="'+cx+'" y="'+(Y0+26)+'" text-anchor="middle" font-size="12" fill="#7c4f24">▲ inicio (la punta) · V1 · '+ (2*N+1) +' arcos arriba</text>';
+    return c_wrap(W,H,inner); }
+  function netRectFull(C,R){ C=Math.max(3,Math.min(C,26)); R=Math.max(3,Math.min(R,58)); var CW=26,RH=24,X0=34,ov=2,nodes={};
+    var W=X0*2+2*C*(CW/2), Y0=24+R*RH, H=Y0+30, inner='';
+    function K(i,r){return i+'_'+r;}
+    for(var r=0;r<=R;r++)for(var i=0;i<=2*C;i++)if((i+r)%2===0)nodes[K(i,r)]={x:X0+i*(CW/2),y:Y0-r*RH};
+    for(var r2=0;r2<R;r2++){var col=(r2%2===0)?kD:kO;for(var i2=0;i2<=2*C;i2++){var a=nodes[K(i2,r2)];if(!a)continue;[[i2-1,r2+1],[i2+1,r2+1]].forEach(function(p){var b=nodes[K(p[0],p[1])];if(b)inner+=c_arc(a.x,a.y,b.x,b.y,RH*0.42,col,ov);});}}
+    for(var k in nodes)inner+=c_x(nodes[k].x,nodes[k].y,kD);
+    for(var r3=1;r3<=R;r3++) if(r3%2===0||R<=14) inner+='<text x="'+(X0-16)+'" y="'+(Y0-r3*RH+4)+'" font-size="10" font-weight="700" fill="'+((r3%2)?kD:kO)+'">'+r3+'</text>';
+    return c_wrap(W,H,inner); }
+  function gridFull(C,R,isPA){ C=Math.max(3,Math.min(C,26)); R=Math.max(3,Math.min(R,58)); var X0=40,SW=isPA?26:22,RH=isPA?32:24,Y0=R*RH+14,W=X0+C*SW+34,H=Y0+26,inner='';
+    for(var c=0;c<=C;c++)inner+=c_ov(X0+c*SW,Y0+8,0,kD);
+    for(var r=1;r<=R;r++){var col=(r%2)?kD:kO,y=Y0-(r-1)*RH;
+      if(isPA){inner+=c_ov(X0-9,y-12,72,col)+c_ov(X0-12,y-26,72,col);}else{inner+=c_ov(X0-8,y-8,72,col);}
+      for(var c2=1;c2<=C;c2++)inner+= isPA? c_pa(X0+c2*SW,y+8,26,col) : c_x(X0+c2*SW,y,col);
+      if(r%2===0||R<=16) inner+='<text x="'+(X0+C*SW+16)+'" y="'+(y+(isPA?-4:4))+'" font-size="10" font-weight="700" fill="'+col+'">'+r+'</text>';}
+    return c_wrap(W,H,inner); }
+  function roundFull(startSts,incR,straightR,isPA){ incR=Math.max(1,Math.min(incR,22)); straightR=Math.max(0,Math.min(straightR,26)); var T=incR+straightR,step=8,r0=14,maxR=r0+T*step,W=maxR*2+40,cx=W/2,cy=W/2,H=W,inner='';
+    inner+='<circle cx="'+cx+'" cy="'+cy+'" r="9" fill="none" stroke="'+kD+'" stroke-width="2"/>';
+    for(var k=1;k<=T;k++){var N=(k<=incR)?startSts*k:startSts*incR,ri=r0+(k-1)*step,ro=r0+k*step,col=(k%2)?kD:kO;
+      for(var s=0;s<N;s++){var a=(s/N)*6.28318-1.5708,x1=cx+ri*Math.cos(a),y1=cy+ri*Math.sin(a),x2=cx+ro*Math.cos(a),y2=cy+ro*Math.sin(a);
+        inner+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="1.4" stroke-linecap="round"/>';
+        if(isPA&&k<=incR){var mf=ri+(ro-ri)*0.45,mx=cx+mf*Math.cos(a),my=cy+mf*Math.sin(a),pp=a+1.5708;inner+='<line x1="'+(mx-3.5*Math.cos(pp)).toFixed(1)+'" y1="'+(my-3.5*Math.sin(pp)).toFixed(1)+'" x2="'+(mx+3.5*Math.cos(pp)).toFixed(1)+'" y2="'+(my+3.5*Math.sin(pp)).toFixed(1)+'" stroke="'+col+'" stroke-width="1.2"/>';}}}
+    return c_wrap(W,H,inner); }
+
   function miniSym(fn){return '<svg width="30" height="26" viewBox="0 0 30 26">'+fn(15,13)+'</svg>';}
   function legendHTML(items){var h='<div class="legend">';items.forEach(function(it){h+='<span class="lg"><span class="lgs">'+it.s+'</span>'+esc(it.t)+'</span>';});return h+'</div>';}
   function legRed(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad (cadeneta)"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"},{s:miniSym(function(x,y){return c_arc(x-11,y+3,x+11,y+3,9,kD,5);}),t:"arco = 5 cad"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (punto raso)"}]);}
