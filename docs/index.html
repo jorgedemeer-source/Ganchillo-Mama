@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Taller de Ganchillo</title>
+<meta name="description" content="Diseña tus prendas de ganchillo (chales, bufandas, gorros) y saca el patrón. Funciona sin internet.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#a9702f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mi Taller">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  :root{
+    --paper:#efe8d9; --surface:#f7f2e8; --panel:#fbf8f1; --inset:#ece3d0;
+    --ink:#33281a; --ink-soft:#6c5b44; --muted:#8a7a60;
+    --accent:#a9702f; --accent-deep:#7c4f24; --accent-soft:#e7d8bf;
+    --line:#d9ccb2; --line-soft:#e6dcc7; --danger:#a64b34; --good:#5f7d3b;
+    --fd:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --fb:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fm:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper); color:var(--ink); font-family:var(--fb); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; padding-bottom:env(safe-area-inset-bottom);}
+  h1,h2,h3{font-family:var(--fd); font-weight:600; letter-spacing:-.01em;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select{font-family:inherit;}
+  .app{max-width:1180px; margin:0 auto; padding:clamp(.8rem,2.5vw,1.8rem);}
+  #errbar{display:none; position:sticky; top:0; z-index:100; background:var(--danger); color:#fff; padding:.6rem 1rem; font-size:.85rem; border-radius:8px; margin-bottom:1rem; font-family:var(--fm);}
+
+  /* header */
+  .top{display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; border-bottom:2px solid var(--accent); padding-bottom:.9rem; margin-bottom:1rem;}
+  .brand{display:flex; align-items:center; gap:.7rem;}
+  .brand .logo{width:42px;height:42px;flex:none;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:1.4rem;}
+  .brand .eyebrow{font-family:var(--fm); font-size:.62rem; letter-spacing:.22em; text-transform:uppercase; color:var(--accent-deep); margin:0;}
+  .brand h1{font-size:clamp(1.25rem,3.6vw,1.7rem); margin:0; line-height:1;}
+  .actions{display:flex; gap:.45rem; flex-wrap:wrap;}
+  .btn{border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:8px; padding:.5rem .75rem; font-size:.84rem; font-weight:600; display:inline-flex; align-items:center; gap:.35rem;}
+  .btn:hover{border-color:var(--accent);} .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;} .btn.primary:hover{background:var(--accent-deep);}
+  .btn.ghost{background:transparent;} .btn.sm{padding:.32rem .55rem; font-size:.78rem;}
+  .btn:focus-visible,input:focus-visible,select:focus-visible,.swatch:focus-visible,.gtab:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* install banner */
+  #install{display:none; align-items:center; gap:.7rem; background:var(--accent-soft); border:1px solid var(--line); border-radius:10px; padding:.6rem .8rem; margin-bottom:1rem; font-size:.88rem;}
+  #install b{color:var(--accent-deep);}
+  #install .x{margin-left:auto;}
+
+  /* garment tabs */
+  .gtabs{display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.1rem;}
+  .gtab{border:1px solid var(--line); background:var(--surface); border-radius:10px; padding:.55rem .9rem; font-size:.9rem; font-weight:600; display:flex; align-items:center; gap:.45rem; color:var(--ink);}
+  .gtab .em{font-size:1.15rem;}
+  .gtab[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent);}
+
+  .grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:1.3rem; align-items:start;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.05rem 1.1rem; margin-bottom:1rem;}
+  .card > h2{font-size:1.02rem; margin:0 0 .8rem; display:flex; align-items:center; gap:.5rem;}
+  .field{margin:.8rem 0;} .field:first-child{margin-top:0;}
+  .field > label{display:block; font-size:.76rem; font-weight:700; letter-spacing:.02em; color:var(--ink-soft); text-transform:uppercase; margin-bottom:.4rem;}
+  .field .sub{font-weight:400; color:var(--muted); text-transform:none; letter-spacing:0;}
+
+  .seg{display:flex; gap:.4rem; flex-wrap:wrap;}
+  .seg button{border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:.48rem .65rem; font-size:.84rem; color:var(--ink); text-align:left; flex:1 1 auto; min-width:7rem;}
+  .seg button small{display:block; color:var(--muted); font-weight:400; font-size:.7rem; margin-top:.1rem; font-family:var(--fm);}
+  .seg button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent);}
+  .inline{display:flex; gap:.5rem; align-items:center;}
+  input[type="number"],input[type="text"],select{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:8px; padding:.5rem .6rem; font-size:.9rem; width:100%;}
+  .inline input[type="number"]{width:6rem;} .unit{color:var(--muted); font-size:.82rem; font-family:var(--fm);}
+  .swatches{display:flex; flex-wrap:wrap; gap:.4rem;}
+  .swatch{width:29px; height:29px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line); padding:0;}
+  .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent); transform:scale(1.08);}
+  .colorpick{display:flex; align-items:center; gap:.5rem; margin-top:.5rem;}
+  .colorpick input[type="color"]{width:38px; height:30px; border:1px solid var(--line); border-radius:6px; background:none; padding:2px;}
+  .colorname{font-size:.78rem; color:var(--ink-soft); font-family:var(--fm);}
+  .toggle{display:flex; align-items:center; gap:.5rem;}
+  .toggle input{width:auto;}
+
+  .addon{display:grid; grid-template-columns:4.4rem 1fr 2.1rem 1.7rem; gap:.5rem; align-items:center; padding:.5rem; border:1px dashed var(--line); border-radius:9px; margin-bottom:.5rem; background:var(--surface);}
+  .addon .mini-color{width:100%; height:32px; border:1px solid var(--line); border-radius:6px; padding:2px; background:none;}
+  .addon .del{border:none; background:none; color:var(--danger); font-size:1.05rem;}
+  .muted-empty{color:var(--muted); font-size:.82rem; font-style:italic; margin:.2rem 0 .5rem;}
+
+  .preview-wrap{position:sticky; top:.7rem;}
+  figure.preview{margin:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fbf9f4;}
+  figure.preview svg{display:block; width:100%; height:auto;}
+  .readout{display:flex; flex-wrap:wrap; gap:.3rem .4rem; padding:.65rem .85rem; border-top:1px solid var(--line); background:var(--panel); font-family:var(--fm); font-size:.74rem; color:var(--ink-soft);}
+  .readout span{background:var(--inset); border-radius:20px; padding:.14rem .55rem; white-space:nowrap;} .readout b{color:var(--ink);}
+
+  .saved-list{display:flex; flex-wrap:wrap; gap:.45rem;}
+  .chip{display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--line); background:var(--surface); border-radius:20px; padding:.3rem .35rem .3rem .65rem; font-size:.8rem;}
+  .chip .dot{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1px var(--line);} .chip .em{font-size:.9rem;}
+  .chip button{border:none;background:none;color:var(--muted);font-size:.9rem;padding:0 .15rem;} .chip button:hover{color:var(--danger);} .chip .load{color:var(--accent-deep);font-weight:700;}
+
+  .pattern{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.25rem 1.35rem; margin-top:1rem;}
+  .pattern h2.title{font-size:1.45rem; margin:0 0 .1rem;} .pattern .psub{color:var(--ink-soft); font-size:.88rem; margin:0 0 1rem;}
+  .pattern section{margin:1.05rem 0; break-inside:avoid;}
+  .pattern h3{font-size:.74rem; text-transform:uppercase; letter-spacing:.13em; font-family:var(--fm); color:var(--accent-deep); font-weight:600; margin:0 0 .5rem; padding-bottom:.28rem; border-bottom:1px solid var(--line-soft);}
+  .pattern p{margin:.5rem 0;} .pattern ul,.pattern ol{margin:.5rem 0; padding-left:1.2rem;} .pattern li{margin:.28rem 0;}
+  .pattern code{font-family:var(--fm); font-size:.85em; background:var(--inset); padding:.05em .35em; border-radius:4px; color:var(--accent-deep);}
+  .callout{background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:.75rem .95rem; margin:.75rem 0; font-size:.92rem;}
+  .matline{display:flex; align-items:center; gap:.5rem; padding:.26rem 0; border-bottom:1px dotted var(--line-soft); font-size:.9rem;} .matline:last-child{border-bottom:0;}
+  .matline .dot{width:15px;height:15px;border-radius:50%;box-shadow:0 0 0 1px var(--line);flex:none;} .matline .m{margin-left:auto; font-family:var(--fm); font-size:.82rem; color:var(--ink-soft); white-space:nowrap;}
+  .note{font-size:.82rem; color:var(--ink-soft);}
+
+  .foot{margin-top:1.4rem; color:var(--muted); font-size:.76rem; text-align:center;} .foot .heart{color:var(--accent);}
+  .toast{position:fixed; left:50%; bottom:1.3rem; transform:translateX(-50%) translateY(1rem); background:var(--ink); color:#fff; padding:.55rem 1rem; border-radius:9px; font-size:.85rem; opacity:0; pointer-events:none; transition:.25s; z-index:200;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .print-only{display:none;}
+
+  @media print{
+    :root{--paper:#fff;--panel:#fff;--surface:#fff;--inset:#f1ece1;--line:#c8bca2;--line-soft:#e0d6c2;--ink:#241a0d;--ink-soft:#4a3d29;}
+    @page{size:A4; margin:15mm;} body{background:#fff; font-size:11.5pt;}
+    .app{max-width:none;padding:0;} .no-print,.top,.gtabs,#install,.col-controls,.readout,.foot,.toast{display:none !important;}
+    .grid{display:block;} .preview-wrap{position:static;} figure.preview{max-width:14cm;margin:0 auto 8mm;}
+    .pattern{border:0;padding:0;} .print-only{display:block;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="errbar" role="alert"></div>
+
+  <div class="top no-print">
+    <div class="brand">
+      <div class="logo">🧶</div>
+      <div><p class="eyebrow">Patrones de ganchillo</p><h1>Mi Taller de Ganchillo</h1></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost sm" id="btnNew">✨ Nuevo</button>
+      <button class="btn ghost sm" id="btnExport">⬇︎ Copia</button>
+      <button class="btn ghost sm" id="btnImport">⬆︎ Restaurar</button>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+      <button class="btn primary" id="btnPrint">🖨️ Imprimir / PDF</button>
+    </div>
+  </div>
+
+  <div id="install" class="no-print">
+    <span>📲 <b>Instálala en tu móvil:</b> <span id="installText">pulsa “Compartir” y luego “Añadir a pantalla de inicio”.</span></span>
+    <button class="btn sm" id="installBtn" hidden>Instalar</button>
+    <button class="btn ghost sm x" id="installClose">✕</button>
+  </div>
+
+  <div class="gtabs no-print" id="gtabs"></div>
+
+  <div class="grid">
+    <div class="col-controls" id="controls"></div>
+    <div class="preview-wrap">
+      <figure class="preview"><div id="previewSvg"></div><div class="readout" id="readout"></div></figure>
+      <div class="card no-print" style="margin-top:1rem;">
+        <div class="field" style="margin:0;">
+          <label>Guarda este diseño</label>
+          <div class="inline"><input type="text" id="designName" placeholder="p. ej. Chal azul de la abuela" style="flex:1;"><button class="btn primary" id="btnSave">💾 Guardar</button></div>
+        </div>
+        <div class="saved-list" id="savedList" style="margin-top:.7rem;"></div>
+      </div>
+      <div class="pattern" id="pattern"></div>
+    </div>
+  </div>
+
+  <p class="foot no-print">Hecho con <span class="heart">♥</span> · tus diseños se guardan en este dispositivo · funciona sin internet</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  window.addEventListener('error', function(e){ try{ var b=document.getElementById('errbar'); if(b){ b.textContent='⚠️ '+((e&&e.message)||'error'); b.style.display='block'; } }catch(_){} });
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var el=function(t,a,h){var e=document.createElement(t); if(a)for(var k in a)e.setAttribute(k,a[k]); if(h!=null)e.innerHTML=h; return e;};
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  function shade(hex,amt){var c=(hex||'#000').replace('#',''); if(c.length===3)c=c.replace(/(.)/g,'$1$1'); var n=parseInt(c,16); var R=cl((n>>16)+amt),G=cl(((n>>8)&255)+amt),B=cl((n&255)+amt); return '#'+(1<<24|R<<16|G<<8|B).toString(16).slice(1);}
+  function cl(v){return Math.max(0,Math.min(255,v));}
+  function hex6(h){h=(h||'#000').replace('#',''); if(h.length===3)h=h.replace(/(.)/g,'$1$1'); return '#'+h;}
+
+  var PALETTE=[
+    {hex:"#b5793f",name:"Camel"},{hex:"#8a5a2b",name:"Caramelo"},{hex:"#d69a2a",name:"Mostaza"},
+    {hex:"#e9dcc2",name:"Crudo"},{hex:"#f4efe6",name:"Blanco roto"},{hex:"#b45a3c",name:"Terracota"},
+    {hex:"#cf9aa0",name:"Rosa palo"},{hex:"#6e2f3a",name:"Burdeos"},{hex:"#7d7a45",name:"Verde oliva"},
+    {hex:"#4a6b57",name:"Verde salvia"},{hex:"#33455f",name:"Azul marino"},{hex:"#6f9fb5",name:"Azul cielo"},
+    {hex:"#b9b3a8",name:"Gris perla"},{hex:"#5a3d2b",name:"Chocolate"},{hex:"#2b2b2b",name:"Negro"}
+  ];
+  function colorName(hex){hex=(hex||'').toLowerCase(); for(var i=0;i<PALETTE.length;i++)if(PALETTE[i].hex.toLowerCase()===hex)return PALETTE[i].name; return "Personalizado";}
+
+  // gauge por aguja: arco (red), y puntos/cm para pb y pa
+  var GAUGE={
+    3.5:{archW:2.1,rowH:1.9,pb:2.6,pbR:2.4,pa:2.2,paR:1.15},
+    4.0:{archW:2.2,rowH:2.0,pb:2.4,pbR:2.2,pa:2.0,paR:1.10},
+    4.5:{archW:2.5,rowH:2.2,pb:2.2,pbR:2.0,pa:1.9,paR:1.05},
+    5.0:{archW:2.8,rowH:2.5,pb:2.0,pbR:1.8,pa:1.7,paR:1.00},
+    6.0:{archW:3.2,rowH:2.9,pb:1.7,pbR:1.5,pa:1.5,paR:0.90}
+  };
+  function g(mm){return GAUGE[mm]||GAUGE[4.5];}
+  function hookLabel(mm){return String(mm).replace('.',',')+' mm';}
+  function cm(x){return String(Math.round(x)).replace('.',',');}
+  var HOOKS=[{mm:3.5,sub:"fino"},{mm:4.0,sub:"medio"},{mm:4.5,sub:"recom."},{mm:5.0,sub:"grueso"},{mm:6.0,sub:"muy grueso"}];
+
+  // ---------- utilidades de patrón ----------
+  function matline(hex,label,amount){return '<div class="matline">'+(hex?'<span class="dot" style="background:'+hex+'"></span>':'')+'<span>'+label+'</span>'+(amount?'<span class="m">'+amount+'</span>':'')+'</div>';}
+  function estM(v){v=Math.ceil(v/10)*10; return v;}
+
+  // ============================================================
+  //  DEFINICIÓN DE PRENDAS (extensible: añade otra aquí)
+  // ============================================================
+  var GARMENTS={};
+
+  // ---------------- CHAL / PAÑUELO ----------------
+  GARMENTS.chal={
+    id:"chal", label:"Chal / Pañuelo", em:"🔺",
+    defaults:{tipo:"tri", talla:"m", wingspan:155, ancho:70, largo:150, hook:4.5, cuerpo:"#b5793f", flecos:"#e9dcc2", densidad:1, largoFleco:28, addons:[]},
+    fields:[
+      {type:"segment",key:"tipo",label:"Forma",options:[{v:"tri",label:"Triangular",sub:"punta abajo"},{v:"rect",label:"Pañuelo",sub:"rectangular"}]},
+      {type:"segment",key:"talla",label:"Talla",showIf:function(s){return s.tipo==="tri";},options:[{v:"s",label:"Pequeño",sub:"~115 cm"},{v:"m",label:"Estándar",sub:"~155 cm"},{v:"l",label:"Grande",sub:"~185 cm"},{v:"custom",label:"A medida",sub:"tú eliges"}]},
+      {type:"number",key:"wingspan",label:"Envergadura (ancho arriba)",unit:"cm",min:60,max:240,showIf:function(s){return s.tipo==="tri"&&s.talla==="custom";}},
+      {type:"number",key:"ancho",label:"Ancho",unit:"cm",min:20,max:120,showIf:function(s){return s.tipo==="rect";}},
+      {type:"number",key:"largo",label:"Largo",unit:"cm",min:60,max:220,showIf:function(s){return s.tipo==="rect";}},
+      {type:"hook",key:"hook",label:"Aguja"},
+      {type:"color",key:"cuerpo",label:"Color del cuerpo"},
+      {type:"color",key:"flecos",label:"Color de los flecos"},
+      {type:"segment",key:"densidad",label:"Densidad de flecos",options:[{v:1,label:"Normal",sub:"1 por arco"},{v:2,label:"Tupido",sub:"2 por arco"}]},
+      {type:"number",key:"largoFleco",label:"Largo del fleco",unit:"cm",min:0,max:45},
+      {type:"addons",key:"addons",label:"Añadidos (flecos extra)"}
+    ],
+    compute:function(s){
+      var gg=g(s.hook), arcs, wing, depth, edge, rows, W, sections=[], measures=[], mats=[];
+      var bodyN=colorName(s.cuerpo), fringeN=colorName(s.flecos);
+      var cut=Math.round((s.largoFleco||0)*2+5), perB=(s.strands||6)*(((s.largoFleco||0)*2/100)+0.05);
+      if(s.tipo==="tri"){
+        W = s.talla==="custom"? s.wingspan : ({s:115,m:155,l:185}[s.talla]||155);
+        var n=Math.max(8,Math.round((W/gg.archW-1)/2)); arcs=2*n+1; wing=Math.round(arcs*gg.archW); depth=Math.round(n*gg.rowH); edge=n; rows=n;
+        var body=estM(n*(n+2)*0.105);
+        measures=[["ancho",wing+" cm"],["alto",depth+" cm"],["vueltas",n],["arcos",arcs]];
+        var baseB=edge*2*s.densidad+1;
+        sections.push({h:"Materiales",html:mats0()});
+        function mats0(){ var h=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.3)+' m');
+          h+=matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB*perB)+' m ('+baseB+')');
+          addonMat(s,perB,function(x){h+=x;}); return h+matNote(s.hook); }
+        sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+abbrRed()});
+        sections.push({h:"Cuerpo · de la punta hacia arriba",html:
+          '<p><b>Inicio:</b> <code>cad 6</code>, cierra en anillo con <code>pr</code>. <b>V1:</b> <code>cad 1</code>, en el anillo <code>pb, (cad 5, pb) ×3</code>. Gira. <b>(3 arcos)</b></p>'+
+          '<div class="callout"><b>Vuelta de aumento</b> (repite cada vuelta): gira, <code>cad 5, pb</code> en el 1.º arco; <code>cad 5, pb</code> otra vez en el 1.º; <code>*cad 5, pb en el siguiente arco*</code> hasta el último; <code>cad 5, pb</code> otra vez en el último. <b>(+2 arcos)</b></div>'+
+          '<p>Sigue hasta la <b>vuelta '+n+'</b> → <b>'+arcs+' arcos</b> ('+wing+' cm). La vuelta <i>n</i> tiene <code>2n+1</code> arcos.</p>'});
+        sections.push({h:"Bordes",html:'<ul><li><b>Borde superior:</b> 1 vuelta de <code>pb</code> (2 pb por arco) para que no ceda.</li><li><b>Lados en diagonal:</b> anuda ahí los flecos.</li></ul>'});
+      } else {
+        var ac=Math.max(6,Math.round(s.ancho/gg.archW)); rows=Math.max(6,Math.round(s.largo/gg.rowH)); arcs=ac;
+        wing=Math.round(ac*gg.archW); depth=Math.round(rows*gg.rowH); edge=0;
+        var body2=estM(ac*rows*0.12);
+        measures=[["ancho",wing+" cm"],["largo",depth+" cm"],["arcos/vta",ac],["vueltas",rows]];
+        var baseB2=ac*s.densidad*2;
+        sections.push({h:"Materiales",html:(function(){var h=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body2+'–'+estM(body2*1.3)+' m'); if(s.largoFleco>0){h+=matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB2*perB)+' m ('+baseB2+')');} addonMat(s,perB,function(x){h+=x;}); return h+matNote(s.hook);})()});
+        sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+abbrRed()});
+        sections.push({h:"Cuerpo · pañuelo rectangular",html:
+          '<p><b>Base:</b> <code>cad '+(ac*5+1)+'</code>. <b>V1:</b> pb en la 6.ª cad, <code>*cad 5, salta 4 cad, pb*</code> hasta el final. <b>('+ac+' arcos)</b></p>'+
+          '<p><b>Vueltas siguientes:</b> gira, <code>cad 5</code>, <code>*pb en el arco, cad 5*</code> a lo largo, pb en el último arco. Repite hasta <b>'+rows+' vueltas</b> ('+depth+' cm).</p>'});
+        if(s.largoFleco>0) sections.push({h:"Flecos",html:fringeText(s,cut,baseB2,fringeN)+'<p class="note">En el pañuelo van en los dos lados cortos.</p>'});
+      }
+      if(s.tipo==="tri"&&s.largoFleco>0){ sections.push({h:"Flecos",html:fringeText(s,cut,edge*2*s.densidad+1,fringeN)+addonList(s)}); }
+      else if(s.addons&&s.addons.length){ sections.push({h:"Flecos añadidos",html:addonList(s)}); }
+      sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor sin apoyar para abrir la red; no aplastes los flecos.</li><li>Cepilla y recorta los flecos parejos.</li></ul>'});
+      var total=(s.tipo==="tri"?(edge*2*s.densidad+1):0)+addonTotal(s);
+      measures.push(["flecos",total||"—"]);
+      return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
+        svg:s.tipo==="tri"? triSVG(s):rectSVG(s,ac,rows)};
+    }
+  };
+
+  // ---------------- BUFANDA / CUELLO ----------------
+  GARMENTS.bufanda={
+    id:"bufanda", label:"Bufanda / Cuello", em:"🧣",
+    defaults:{tipo:"bufanda", punto:"red", hook:4.5, ancho:22, largo:160, contorno:130, alto:30, cuerpo:"#4a6b57", flecos:"#e9dcc2", largoFleco:14},
+    fields:[
+      {type:"segment",key:"tipo",label:"Tipo",options:[{v:"bufanda",label:"Bufanda",sub:"recta"},{v:"cuello",label:"Cuello",sub:"circular"}]},
+      {type:"segment",key:"punto",label:"Punto",options:[{v:"red",label:"Red",sub:"calado"},{v:"pb",label:"Punto bajo",sub:"tupido"},{v:"pa",label:"Punto alto",sub:"rápido"}]},
+      {type:"hook",key:"hook",label:"Aguja"},
+      {type:"number",key:"ancho",label:"Ancho",unit:"cm",min:10,max:50,showIf:function(s){return s.tipo==="bufanda";}},
+      {type:"number",key:"largo",label:"Largo",unit:"cm",min:80,max:220,showIf:function(s){return s.tipo==="bufanda";}},
+      {type:"number",key:"contorno",label:"Contorno (vuelta del cuello)",unit:"cm",min:45,max:160,showIf:function(s){return s.tipo==="cuello";}},
+      {type:"number",key:"alto",label:"Alto",unit:"cm",min:15,max:60,showIf:function(s){return s.tipo==="cuello";}},
+      {type:"color",key:"cuerpo",label:"Color principal"},
+      {type:"number",key:"largoFleco",label:"Flecos en los extremos (0 = sin flecos)",unit:"cm",min:0,max:30,showIf:function(s){return s.tipo==="bufanda";}},
+      {type:"color",key:"flecos",label:"Color de los flecos",showIf:function(s){return s.tipo==="bufanda"&&s.largoFleco>0;}}
+    ],
+    compute:function(s){
+      var gg=g(s.hook), sections=[], measures=[], W,H,across,rows, unit, ptName;
+      var bodyN=colorName(s.cuerpo), fringeN=colorName(s.flecos);
+      if(s.punto==="red"){unit=gg.archW; rows= s.tipo==="bufanda"?Math.round(s.largo/gg.rowH):Math.round(s.alto/gg.rowH); ptName="red de arcos";}
+      else if(s.punto==="pb"){unit=1/gg.pb; rows= s.tipo==="bufanda"?Math.round(s.largo*gg.pbR):Math.round(s.alto*gg.pbR); ptName="punto bajo";}
+      else{unit=1/gg.pa; rows= s.tipo==="bufanda"?Math.round(s.largo*gg.paR):Math.round(s.alto*gg.paR); ptName="punto alto";}
+      if(s.tipo==="bufanda"){ across=Math.max(6,Math.round(s.ancho/unit)); W=Math.round(across*unit); H=Math.round(rows*(s.punto==="red"?gg.rowH:(s.punto==="pb"?1/gg.pbR:1/gg.paR)));
+        measures=[["ancho",W+" cm"],["largo",H+" cm"],["puntos/vta",across],["vueltas",rows]];
+      } else { across=Math.max(12,Math.round(s.contorno/unit)); W=Math.round(across*unit); H=Math.round(rows*(s.punto==="red"?gg.rowH:(s.punto==="pb"?1/gg.pbR:1/gg.paR)));
+        measures=[["contorno",W+" cm"],["alto",H+" cm"],["puntos/vta",across],["vueltas",rows]];
+      }
+      var perStitch= s.punto==="pa"?0.11:(s.punto==="pb"?0.09:0.10);
+      var body=estM(across*rows*perStitch* (s.punto==="red"?0.7:1));
+      sections.push({h:"Materiales",html:matline(s.cuerpo,'Hilo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.25)+' m')+(s.tipo==="bufanda"&&s.largoFleco>0?matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(across*2*((s.largoFleco*2/100)+0.05)*6)+' m'):'')+matNote(s.hook)});
+      sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+(s.punto==="red"?abbrRed():abbrBasic())});
+      if(s.tipo==="bufanda"){
+        var base = s.punto==="red"? (across*5+1) : (s.punto==="pa"? across+2 : across+1);
+        sections.push({h:"Cuerpo · bufanda ("+ptName+")",html:
+          '<p><b>Base:</b> <code>cad '+base+'</code>.</p>'+
+          (s.punto==="red"
+            ? '<p><b>V1:</b> pb en la 6.ª cad, <code>*cad 5, salta 4, pb*</code> al final ('+across+' arcos). <b>Siguientes:</b> gira, <code>cad 5, *pb en arco, cad 5*</code>, pb en el último arco. Repite hasta <b>'+rows+' vueltas</b>.</p>'
+            : '<p><b>V1:</b> '+(s.punto==="pa"?'pa en la 3.ª cad':'pb en la 2.ª cad')+' y en cada cad ('+across+' pts). <b>Siguientes:</b> gira, '+(s.punto==="pa"?'<code>cad 2</code>':'<code>cad 1</code>')+', '+(s.punto==="pa"?'pa':'pb')+' en cada punto. Repite hasta <b>'+rows+' vueltas</b> ('+H+' cm).</p>')});
+        if(s.largoFleco>0) sections.push({h:"Flecos",html:fringeText({strands:6,largoFleco:s.largoFleco,flecos:s.flecos},Math.round(s.largoFleco*2+5),across,fringeN)+'<p class="note">Reparte los flecos por los dos extremos cortos.</p>'});
+      } else {
+        var mult = s.punto==="red"?"":" (procura un nº par de puntos)";
+        sections.push({h:"Cuerpo · cuello circular ("+ptName+")",html:
+          '<p><b>Base:</b> <code>cad '+(s.punto==="red"?(across*5):across)+'</code> y <b>cierra en anillo</b> con <code>pr</code>, con cuidado de no retorcer'+mult+'.</p>'+
+          (s.punto==="red"
+            ? '<p><b>Cada vuelta:</b> <code>*cad 5, pb en el siguiente arco*</code> alrededor; cierra con <code>pr</code>. Repite <b>'+rows+' vueltas</b> ('+H+' cm).</p>'
+            : '<p><b>Cada vuelta:</b> '+(s.punto==="pa"?'<code>cad 2</code>, pa':'<code>cad 1</code>, pb')+' en cada punto alrededor; cierra con <code>pr</code>. Repite <b>'+rows+' vueltas</b> ('+H+' cm).</p>')+
+          '<p class="note">Se teje en redondo (tubo). Puedes doblarlo para llevarlo doble.</p>'});
+      }
+      sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor suave.</li>'+(s.tipo==="bufanda"&&s.largoFleco>0?'<li>Recorta los flecos parejos.</li>':'')+'</ul>'});
+      return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s):cowlSVG(s)};
+    }
+  };
+
+  // ---------------- GORRO ----------------
+  GARMENTS.gorro={
+    id:"gorro", label:"Gorro", em:"🧢",
+    defaults:{talla:"adulto", contorno:56, alto:21, punto:"pa", hook:4.5, cuerpo:"#33455f", pompon:true, pomponColor:"#e9dcc2"},
+    fields:[
+      {type:"segment",key:"talla",label:"Talla",after:function(s){var m={bebe:15,nino:18,adulto:21}; if(s.talla!=="custom"&&m[s.talla])s.alto=m[s.talla];},options:[{v:"bebe",label:"Bebé",sub:"~40 cm"},{v:"nino",label:"Niño",sub:"~48 cm"},{v:"adulto",label:"Adulto",sub:"~56 cm"},{v:"custom",label:"A medida",sub:"contorno"}]},
+      {type:"number",key:"contorno",label:"Contorno de la cabeza",unit:"cm",min:34,max:64,showIf:function(s){return s.talla==="custom";}},
+      {type:"number",key:"alto",label:"Alto del gorro",unit:"cm",min:12,max:30},
+      {type:"segment",key:"punto",label:"Punto",options:[{v:"pa",label:"Punto alto",sub:"rápido"},{v:"pb",label:"Punto bajo",sub:"tupido, calentito"}]},
+      {type:"hook",key:"hook",label:"Aguja"},
+      {type:"color",key:"cuerpo",label:"Color"},
+      {type:"toggle",key:"pompon",label:"Pompón"},
+      {type:"color",key:"pomponColor",label:"Color del pompón",showIf:function(s){return s.pompon;}}
+    ],
+    compute:function(s){
+      var gg=g(s.hook); var bodyN=colorName(s.cuerpo);
+      var C = s.talla==="custom"? s.contorno : ({bebe:40,nino:48,adulto:56}[s.talla]||56);
+      var Hdef = {bebe:15,nino:18,adulto:21}[s.talla]||s.alto;
+      var H = s.alto || Hdef;
+      var isPA=s.punto==="pa";
+      var perCm=isPA?gg.pa:gg.pb, rowCm=isPA?(1/gg.paR):(1/gg.pbR);
+      var hatCirc=C*0.92;
+      var startSts=isPA?12:6, incPer=startSts;
+      var targetSts=Math.max(startSts*4, Math.round(hatCirc*perCm/incPer)*incPer);
+      var incRounds=targetSts/incPer;
+      var crownDepth=incRounds*rowCm;
+      var straight=Math.max(0,Math.round((H-crownDepth-2)/rowCm));
+      var totalR=incRounds+straight+2;
+      var body=estM(targetSts*(incRounds/2+straight)*(isPA?0.09:0.07));
+      var measures=[["contorno",Math.round(hatCirc)+" cm"],["alto",H+" cm"],["puntos",targetSts],["vueltas",totalR]];
+      var st=isPA?"pa":"pb";
+      var incTxt='';
+      var maxShow=Math.min(incRounds,6);
+      incTxt+='<li><b>V1:</b> '+startSts+' '+st+' en anillo mágico ('+startSts+')</li>';
+      incTxt+='<li><b>V2:</b> 2 '+st+' en cada punto ('+startSts*2+')</li>';
+      for(var k=3;k<=maxShow;k++){ incTxt+='<li><b>V'+k+':</b> <code>('+(k-2)+' '+st+', aum) ×'+startSts+'</code> ('+startSts*k+')</li>'; }
+      if(incRounds>maxShow){ incTxt+='<li>… sigue aumentando '+startSts+' puntos por vuelta (cada vuelta un '+st+' más entre aumentos) hasta la <b>V'+incRounds+'</b> → <b>'+targetSts+' puntos</b>.</li>'; }
+      var sections=[];
+      sections.push({h:"Materiales",html:matline(s.cuerpo,'Hilo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.3)+' m')+(s.pompon?matline(s.pomponColor,'Pompón · <b>'+esc(colorName(s.pomponColor))+'</b>','un poco'):'')+matNote(s.hook)});
+      sections.push({h:"Muestra y abreviaturas",html:'<p><b>Muestra</b> (aguja '+hookLabel(s.hook)+'): ~'+cm(perCm)+' '+st+' por cm. Se teje <b>en redondo</b>, en espiral o cerrando cada vuelta con <code>pr</code>. Marca el inicio de vuelta.</p>'+abbrHat(st)});
+      sections.push({h:"Copa · aumentos (círculo plano)",html:'<ul>'+incTxt+'</ul>'});
+      sections.push({h:"Cuerpo · sin aumentos",html:'<p>Teje <b>'+straight+' vueltas</b> de <code>'+st+'</code> sin aumentar, todas de '+targetSts+' puntos, hasta que el gorro mida ~'+H+' cm.</p>'});
+      sections.push({h:"Ala / borde",html:'<p>Termina con <b>2 vueltas de pb</b> (o 4-5 si quieres doblar el ala). Remata con <code>pr</code> y esconde la hebra.</p>'});
+      if(s.pompon) sections.push({h:"Pompón",html:'<p>Haz un pompón de ~8-9 cm con el hilo del pompón (con las manos o con un molde), átalo fuerte y cóselo a la copa. Recórtalo redondo.</p>'});
+      return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s)};
+    }
+  };
+
+  // ---------- textos reutilizables ----------
+  function gaugeText(gg,mm){return '<p><b>Muestra</b> (aguja '+hookLabel(mm)+'): en red, 1 arco ≈ '+cm(gg.archW)+' cm y 1 vuelta ≈ '+cm(gg.rowH)+' cm. Teje flojo para que caiga bien. Haz una muestra pequeña y ajusta.</p>';}
+  function abbrRed(){return '<p class="note"><code>cad</code> cadeneta · <code>pb</code> punto bajo (US sc/UK dc) · <code>pr</code> punto raso · <b>arco</b> = 5 cadenetas sujetas con 1 pb · <code>(n)</code> puntos al final de la vuelta.</p>';}
+  function abbrBasic(){return '<p class="note"><code>cad</code> cadeneta · <code>pb</code> punto bajo · <code>pa</code> punto alto · <code>pr</code> punto raso.</p>';}
+  function abbrHat(st){return '<p class="note"><code>'+st+'</code> '+(st==="pa"?"punto alto":"punto bajo")+' · <code>aum</code> aumento (2 puntos en el mismo) · <code>pr</code> punto raso · anillo mágico para empezar.</p>';}
+  function matNote(mm){return '<p class="note">Aguja de ganchillo <b>'+hookLabel(mm)+'</b>, aguja lanera y tijeras. Cantidades de hilo <i>aproximadas</i>: compra con margen.</p>';}
+  function fringeText(s,cut,count,fringeN){return '<p>Corta hebras de <b>~'+cut+' cm</b> ('+(s.strands||6)+' hebras por fleco). Dobla, pasa el bucle por el borde, mete las puntas y aprieta (nudo de alondra). Coloca <b>'+count+' flecos</b> en '+esc(fringeN)+'.</p><p class="note">Para el efecto peludo, usa alpaca o mohair y cepilla los flecos al terminar.</p>';}
+  function addonMat(s,perB,put){ var map=addonMap(s); for(var c in map){ put(matline(c,'Flecos añadidos · <b>'+esc(colorName(c))+'</b>','~'+estM(map[c]*perB)+' m ('+map[c]+')')); } }
+  function addonMap(s){var m={}; (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0; if(q)m[a.color]=(m[a.color]||0)+q;}); return m;}
+  function addonTotal(s){var t=0;(s.addons||[]).forEach(function(a){t+=parseInt(a.qty,10)||0;});return t;}
+  function addonList(s){ if(!(s.addons&&s.addons.filter(function(a){return (parseInt(a.qty,10)||0)>0;}).length)) return ''; var h='<p><b>Añadidos:</b></p><ul>'; (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0; if(!q)return; h+='<li><b>'+q+' flecos</b> en <b>'+esc(zonaText(a.zona))+'</b>, color '+esc(colorName(a.color))+' <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+a.color+';box-shadow:0 0 0 1px var(--line);vertical-align:middle"></span></li>';}); return h+'</ul>'; }
+  var ZONAS=[{v:"orilla",t:"toda la orilla inferior (los 2 lados)"},{v:"izq",t:"solo el lado izquierdo"},{v:"der",t:"solo el lado derecho"},{v:"punta",t:"solo la punta"},{v:"arriba",t:"borde superior"}];
+  function zonaText(v){for(var i=0;i<ZONAS.length;i++)if(ZONAS[i].v===v)return ZONAS[i].t; return v;}
+
+  // ---------- previews SVG ----------
+  function meshDefs(id,body){return '<defs><pattern id="'+id+'" width="15" height="15" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="15" height="15" fill="'+body+'"/><path d="M0 0H15M0 0V15" stroke="rgba(255,255,255,.28)" stroke-width="1.3"/></pattern></defs>';}
+  function fringeAlong(x1,y1,x2,y2,count,color,dx,dy){var s='';count=Math.max(1,Math.min(count,16));for(var i=0;i<count;i++){var t=(i+0.5)/count,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;s+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(x+dx).toFixed(1)+'" y2="'+(y+dy).toFixed(1)+'" stroke="'+color+'" stroke-width="3.2" stroke-linecap="round" opacity="0.9"/>';}return s;}
+  function svgWrap(inner){return '<svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vista previa"><rect width="400" height="360" fill="#fbf9f4"/>'+inner+'</svg>';}
+  function triSVG(s){var A={x:52,y:70},B={x:348,y:70},P={x:200,y:298};var i=meshDefs('mA',s.cuerpo);
+    i+=fringeAlong(A.x,A.y,P.x,P.y,(({s:23,m:31,l:37}[s.talla])||Math.round((( s.talla==="custom"?s.wingspan:155)/g(s.hook).archW-1)/2))*s.densidad,s.flecos,-6,34);
+    i+=fringeAlong(B.x,B.y,P.x,P.y,(({s:23,m:31,l:37}[s.talla])||20)*s.densidad,s.flecos,6,34);
+    i+='<line x1="200" y1="298" x2="200" y2="338" stroke="'+s.flecos+'" stroke-width="3.2" stroke-linecap="round"/>';
+    (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0;if(!q)return;var c=a.color;if(a.zona==="izq"||a.zona==="orilla")i+=fringeAlong(A.x,A.y,P.x,P.y,q,c,-11,40);if(a.zona==="der"||a.zona==="orilla")i+=fringeAlong(B.x,B.y,P.x,P.y,q,c,11,40);if(a.zona==="punta")i+=fringeAlong(P.x-14,P.y+4,P.x+14,P.y+4,Math.min(q,6),c,0,46);if(a.zona==="arriba")i+=fringeAlong(A.x,A.y,B.x,B.y,q,c,0,-30);});
+    i+='<polygon points="52,70 348,70 200,298" fill="url(#mA)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';return svgWrap(i);}
+  function rectSVG(s){var i=meshDefs('mR',s.cuerpo);var x=120,w=160,y=50,h=230;
+    if(s.largoFleco>0){i+=fringeAlong(x,y+h,x+w,y+h,10,s.flecos,0,34);}
+    i+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="url(#mR)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
+    if(s.largoFleco>0){i+=fringeAlong(x,y,x+w,y,10,s.flecos,0,-30);}return svgWrap(i);}
+  function scarfSVG(s){var i=meshDefs('mS',s.cuerpo);var x=155,w=90,y=30,h=270;
+    if(s.largoFleco>0)i+=fringeAlong(x,y+h,x+w,y+h,7,s.flecos,0,30);
+    i+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6" fill="url(#mS)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
+    if(s.largoFleco>0)i+=fringeAlong(x,y,x+w,y,7,s.flecos,0,-24);return svgWrap(i);}
+  function cowlSVG(s){var i=meshDefs('mC',s.cuerpo);
+    i+='<ellipse cx="200" cy="180" rx="120" ry="150" fill="none" stroke="url(#mC)" stroke-width="46"/>';
+    i+='<ellipse cx="200" cy="180" rx="120" ry="150" fill="none" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
+    i+='<ellipse cx="200" cy="180" rx="97" ry="127" fill="#fbf9f4" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="1.5"/>';return svgWrap(i);}
+  function hatSVG(s){var i=meshDefs('mH',s.cuerpo);
+    i+='<path d="M92 250 Q92 96 200 96 Q308 96 308 250 Z" fill="url(#mH)" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2.5"/>';
+    i+='<rect x="80" y="248" width="240" height="34" rx="14" fill="'+shade(s.cuerpo,-14)+'" stroke="'+shade(s.cuerpo,-30)+'" stroke-width="2"/>';
+    if(s.pompon)i+='<circle cx="200" cy="84" r="26" fill="'+s.pomponColor+'" stroke="'+shade(s.pomponColor,-25)+'" stroke-width="1.5"/>';return svgWrap(i);}
+
+  // ============================================================
+  //  APP SHELL
+  // ============================================================
+  var order=["chal","bufanda","gorro"];
+  var app={ current:"chal", name:"", state:{} };
+  function freshState(gid){var g0=GARMENTS[gid]; var st=JSON.parse(JSON.stringify(g0.defaults)); st.strands=6; if(st.addons)st.addons=[]; return st;}
+  function initStates(){ order.forEach(function(gid){ app.state[gid]=freshState(gid); }); }
+
+  function buildTabs(){ var t=$("#gtabs"); t.innerHTML=''; order.forEach(function(gid){ var G=GARMENTS[gid]; var b=el('button',{type:'button','class':'gtab','data-g':gid},'<span class="em">'+G.em+'</span> '+G.label); b.addEventListener('click',function(){ app.current=gid; syncTabs(); buildControls(); update(); }); t.appendChild(b); }); }
+  function syncTabs(){ Array.prototype.forEach.call($("#gtabs").children,function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-g')===app.current); }); }
+
+  function st(){ return app.state[app.current]; }
+  function fields(){ return GARMENTS[app.current].fields; }
+
+  function buildControls(){
+    var wrap=$("#controls"); wrap.innerHTML='';
+    var card=el('div',{'class':'card'}); card.appendChild(el('h2',null,GARMENTS[app.current].em+' '+GARMENTS[app.current].label));
+    fields().forEach(function(f){ if(f.showIf && !f.showIf(st())) return; card.appendChild(buildField(f)); });
+    wrap.appendChild(card);
+  }
+  function buildField(f){
+    var s=st(); var fld=el('div',{'class':'field'});
+    var lab=el('label',null,f.label+(f.unit?' <span class="sub">('+f.unit+')</span>':'')); fld.appendChild(lab);
+    if(f.type==="segment"){ var seg=el('div',{'class':'seg'}); f.options.forEach(function(o){ var b=el('button',{type:'button'},'<b>'+o.label+'</b>'+(o.sub?'<small>'+o.sub+'</small>':'')); b.setAttribute('aria-pressed', String(s[f.key])===String(o.v)); b.addEventListener('click',function(){ s[f.key]=o.v; if(f.after)f.after(s); buildControls(); update(); }); seg.appendChild(b); }); fld.appendChild(seg); }
+    else if(f.type==="hook"){ var seg2=el('div',{'class':'seg'}); HOOKS.forEach(function(h){ var b=el('button',{type:'button'},'<b>'+hookLabel(h.mm)+'</b><small>'+h.sub+'</small>'); b.setAttribute('aria-pressed', Number(s[f.key])===h.mm); b.addEventListener('click',function(){ s[f.key]=h.mm; buildControls(); update(); }); seg2.appendChild(b); }); fld.appendChild(seg2); }
+    else if(f.type==="number"){ var box=el('div',{'class':'inline'}); var inp=el('input',{type:'number',min:String(f.min),max:String(f.max),value:String(s[f.key])}); inp.addEventListener('input',function(){ var v=parseInt(inp.value,10); if(isNaN(v))return; s[f.key]=Math.max(f.min,Math.min(f.max,v)); update(); }); box.appendChild(inp); if(f.unit)box.appendChild(el('span',{'class':'unit'},f.unit)); fld.appendChild(box); }
+    else if(f.type==="color"){ var sw=el('div',{'class':'swatches'}); PALETTE.forEach(function(c){ var b=el('button',{type:'button','class':'swatch',title:c.name,'aria-label':c.name}); b.style.background=c.hex; b.setAttribute('aria-pressed', c.hex.toLowerCase()===String(s[f.key]).toLowerCase()); b.addEventListener('click',function(){ s[f.key]=c.hex; buildControls(); update(); }); sw.appendChild(b); }); fld.appendChild(sw);
+      var cp=el('div',{'class':'colorpick'}); var pk=el('input',{type:'color'}); pk.value=hex6(s[f.key]); var nm=el('span',{'class':'colorname'},colorName(s[f.key])+' · '+s[f.key]); pk.addEventListener('input',function(){ s[f.key]=pk.value; nm.textContent=colorName(pk.value)+' · '+pk.value; update(); }); cp.appendChild(pk); cp.appendChild(nm); fld.appendChild(cp); }
+    else if(f.type==="toggle"){ var tg=el('label',{'class':'toggle'}); var ck=el('input',{type:'checkbox'}); if(s[f.key])ck.checked=true; ck.addEventListener('change',function(){ s[f.key]=ck.checked; buildControls(); update(); }); tg.appendChild(ck); tg.appendChild(document.createTextNode(' '+(s[f.key]?'Sí':'No'))); fld.innerHTML=''; fld.appendChild(lab); fld.appendChild(tg); }
+    else if(f.type==="addons"){ var list=el('div'); renderAddons(list,s); fld.appendChild(list); var add=el('button',{type:'button','class':'btn sm'},'➕ Añadir flecos'); add.addEventListener('click',function(){ s.addons=s.addons||[]; s.addons.push({qty:10,zona:'punta',color:s.flecos}); buildControls(); update(); }); fld.appendChild(add); }
+    return fld;
+  }
+  function renderAddons(list,s){ list.innerHTML=''; if(!s.addons||!s.addons.length){ list.appendChild(el('div',{'class':'muted-empty'},'Sin añadidos. Pon flecos extra en una zona.')); return; }
+    s.addons.forEach(function(a,idx){ var row=el('div',{'class':'addon'}); var q=el('input',{type:'number',min:'1',max:'150',value:String(a.qty),'aria-label':'cantidad'}); q.addEventListener('input',function(){ a.qty=q.value; update(); }); var sel=el('select',{'aria-label':'zona'}); ZONAS.forEach(function(z){ var o=el('option',{value:z.v},z.t); if(z.v===a.zona)o.selected=true; sel.appendChild(o); }); sel.addEventListener('change',function(){ a.zona=sel.value; update(); }); var col=el('input',{type:'color','class':'mini-color','aria-label':'color'}); col.value=hex6(a.color); col.addEventListener('input',function(){ a.color=col.value; update(); }); var del=el('button',{type:'button','class':'del',title:'Quitar'},'✕'); del.addEventListener('click',function(){ s.addons.splice(idx,1); buildControls(); update(); }); row.appendChild(q); row.appendChild(sel); row.appendChild(col); row.appendChild(del); list.appendChild(row); }); }
+
+  function update(){ try{ var r=GARMENTS[app.current].compute(st()); $("#previewSvg").innerHTML=r.svg; var ro=$("#readout"); ro.innerHTML=r.measures.map(function(m){return '<span><b>'+m[1]+'</b> '+m[0]+'</span>';}).join(''); renderPattern(r); }catch(err){ var b=$("#errbar"); if(b){ b.textContent='⚠️ '+err.message; b.style.display='block'; } } }
+  function renderPattern(r){ var p=$("#pattern"); var name=app.name|| r.title; var h='';
+    h+='<div class="print-only" style="font-family:var(--fm);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#7c4f24;margin-bottom:.3rem;">Patrón de ganchillo · Mi Taller</div>';
+    h+='<h2 class="title">'+esc(name)+'</h2><p class="psub">'+esc(r.psub)+'</p>';
+    r.sections.forEach(function(sec){ h+='<section><h3>'+esc(sec.h)+'</h3>'+sec.html+'</section>'; });
+    p.innerHTML=h; }
+
+  // ---------- guardar / cargar ----------
+  var LS='taller.designs.v1';
+  function loadStore(){ try{ return JSON.parse(localStorage.getItem(LS)||'[]'); }catch(e){ return []; } }
+  function saveStore(a){ try{ localStorage.setItem(LS,JSON.stringify(a)); }catch(e){} }
+  function renderSaved(){ var wrap=$("#savedList"); wrap.innerHTML=''; var arr=loadStore(); if(!arr.length){ wrap.appendChild(el('div',{'class':'muted-empty'},'Aún no has guardado diseños.')); return; }
+    arr.forEach(function(d,i){ var G=GARMENTS[d.garment]||{em:'🧶'}; var chip=el('div',{'class':'chip'}); chip.appendChild(el('span',{'class':'em'},G.em)); chip.appendChild(el('span',{'class':'dot',style:'background:'+(d.state.cuerpo||'#b5793f')})); var load=el('button',{type:'button','class':'load'},esc(d.name||'(sin nombre)')); load.addEventListener('click',function(){ app.current=d.garment; app.state[d.garment]=Object.assign(freshState(d.garment),d.state); app.name=d.name||''; $("#designName").value=app.name; syncTabs(); buildControls(); update(); toast('Diseño cargado'); }); var del=el('button',{type:'button',title:'Borrar'},'🗑'); del.addEventListener('click',function(){ var s2=loadStore(); s2.splice(i,1); saveStore(s2); renderSaved(); toast('Borrado'); }); chip.appendChild(load); chip.appendChild(del); wrap.appendChild(chip); }); }
+
+  var toastT; function toast(m){ var t=$("#toast"); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove('show');},1700); }
+
+  // ---------- eventos ----------
+  function bind(){
+    $("#designName").addEventListener('input',function(){ app.name=this.value; renderPattern(GARMENTS[app.current].compute(st())); });
+    $("#btnSave").addEventListener('click',function(){ if(!app.name){ app.name=$("#designName").value||(GARMENTS[app.current].label+' '+(loadStore().length+1)); } var arr=loadStore(); var snap={garment:app.current,name:app.name,state:JSON.parse(JSON.stringify(st()))}; var ix=arr.findIndex(function(d){return d.name===snap.name && d.garment===snap.garment;}); if(ix>=0)arr[ix]=snap; else arr.push(snap); saveStore(arr); renderSaved(); toast(ix>=0?'Actualizado':'Guardado ✓'); });
+    $("#btnNew").addEventListener('click',function(){ app.state[app.current]=freshState(app.current); app.name=''; $("#designName").value=''; buildControls(); update(); toast('Nuevo'); });
+    $("#btnPrint").addEventListener('click',function(){ window.print(); });
+    $("#btnExport").addEventListener('click',function(){ var data=JSON.stringify({app:'mi-taller-ganchillo',designs:loadStore()},null,2); var blob=new Blob([data],{type:'application/json'}); var url=URL.createObjectURL(blob); var a=el('a',{href:url,download:'mis-tejidos.json'}); document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Copia guardada'); });
+    $("#btnImport").addEventListener('click',function(){ $("#fileImport").click(); });
+    $("#fileImport").addEventListener('change',function(ev){ var f=ev.target.files[0]; if(!f)return; var rd=new FileReader(); rd.onload=function(){ try{ var o=JSON.parse(rd.result); if(o.designs){ saveStore(o.designs); renderSaved(); toast('Restaurado ✓'); } }catch(e){ toast('Archivo no válido'); } }; rd.readAsText(f); ev.target.value=''; });
+    $("#installClose").addEventListener('click',function(){ $("#install").style.display='none'; try{localStorage.setItem('taller.hideInstall','1');}catch(e){} });
+  }
+
+  // ---------- PWA install hint ----------
+  var deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferredPrompt=e; var ib=$("#installBtn"); if(ib){ ib.hidden=false; ib.addEventListener('click',function(){ deferredPrompt.prompt(); }); } });
+  function showInstallHint(){ try{ if(localStorage.getItem('taller.hideInstall')==='1')return; }catch(e){} var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone; if(standalone)return; var isiOS=/iphone|ipad|ipod/i.test(navigator.userAgent); $("#installText").textContent= isiOS? 'pulsa el botón Compartir ⬆️ y luego “Añadir a pantalla de inicio”.' : 'busca “Instalar app” o “Añadir a pantalla de inicio” en el menú del navegador.'; $("#install").style.display='flex'; }
+
+  // ---------- init ----------
+  try{
+    initStates(); buildTabs(); syncTabs(); buildControls(); bind(); renderSaved(); update(); showInstallHint();
+    try{ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(function(){}); } }catch(_){}
+  }catch(err){ var b=document.getElementById('errbar'); if(b){ b.textContent='⚠️ No se pudo iniciar: '+err.message+'. Abre el enlace en Chrome o Safari.'; b.style.display='block'; } }
+})();
+</script>
+</body>
+</html>
