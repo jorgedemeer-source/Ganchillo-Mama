@@ -1,6 +1,6 @@
 /* Service worker v3 — "network-first" para el HTML (así siempre se ve la última
    versión cuando hay internet) y cache para funcionar sin conexión. */
-var CACHE = 'taller-v3';
+var CACHE = 'taller-v4';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function (e) {
