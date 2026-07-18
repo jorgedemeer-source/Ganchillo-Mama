@@ -286,7 +286,7 @@
       var total=(s.tipo==="tri"?(edge*2*s.densidad+1):0)+addonTotal(s);
       measures.push(["flecos",total||"—"]);
       var diagKeyC='chal|'+s.tipo+'|'+arcCad+'|'+(s.tipo==="tri"?n:(ac+'x'+rows));
-      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyC,function(){return (s.tipo==="tri"?netTriFull(n):netRectFull(ac,rows))+legRed(arcCad);})});
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyC,function(){return (s.tipo==="tri"?netTriFull(n):netRectFull(ac,rows))+legRed(arcCad)+zoomHead()+zoomRed(arcCad);})});
       sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:tecnicaRed(arcCad)});
       sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('chal',s,{n:n,wing:wing})+'</div>'});
       return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
@@ -344,7 +344,7 @@
       }
       sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor suave.</li>'+(s.tipo==="bufanda"&&s.largoFleco>0?'<li>Recorta los flecos parejos.</li>':'')+'</ul>'});
       var diagKeyB='buf|'+s.tipo+'|'+s.punto+'|'+across+'x'+rows;
-      var diagH = cachedChart(diagKeyB,function(){return s.punto==="red"?(netRectFull(across,rows)+legRed()):(gridFull(across,rows,s.punto==="pa")+(s.punto==="pa"?legPA():legPB()));});
+      var diagH = cachedChart(diagKeyB,function(){return s.punto==="red"?(netRectFull(across,rows)+legRed()+zoomHead()+zoomRed(5)):(gridFull(across,rows,s.punto==="pa")+(s.punto==="pa"?legPA():legPB())+zoomHead()+zoomGrid(s.punto==="pa"));});
       sections.splice(2,0,{h:"Diagrama del patrón completo",html:diagH});
       sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:(s.punto==='red'?tecnicaRed(5):tecnicaBasico(s.punto))});
       sections.push({h:"Cuidado y lavado",html:cuidado()});
@@ -399,7 +399,7 @@
       sections.push({h:"Ala / borde",html:'<p>Termina con <b>2 vueltas de pb</b> (o 4-5 si quieres doblar el ala). Remata con <code>pr</code> y esconde la hebra.</p>'});
       if(s.pompon) sections.push({h:"Pompón",html:'<p>Haz un pompón de ~8-9 cm con el hilo del pompón (con las manos o con un molde), átalo fuerte y cóselo a la copa. Recórtalo redondo.</p>'});
       var diagKeyG='gorro|'+s.punto+'|'+startSts+'|'+incRounds+'|'+straight;
-      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyG,function(){return roundFull(startSts,incRounds,straight,isPA)+(isPA?legPA():legPB());})});
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyG,function(){return roundFull(startSts,incRounds,straight,isPA)+(isPA?legPA():legPB())+zoomHead()+zoomRound(isPA);})});
       sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:tecnicaGorro(s.punto)});
       sections.push({h:"Cuidado y lavado",html:cuidado()});
       sections.push({h:"Consejos y errores comunes",html:consejosGorro()});
@@ -530,6 +530,34 @@
   function legRed(ac){ac=ac||5;return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad (cadeneta)"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"},{s:miniSym(function(x,y){return c_arc(x-11,y+3,x+11,y+3,9,kD,5);}),t:"arco = "+ac+" cad"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (punto raso)"}]);}
   function legPA(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_pa(x,y+11,22,kD);}),t:"pa (punto alto)"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (raso)"}]);}
   function legPB(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"}]);}
+
+  // ===== ZOOM con notas (cómo leer el diagrama) =====
+  function bigOv(cx,cy,ang,col){col=col||kD;return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="13" ry="6" transform="rotate('+(+ang).toFixed(1)+' '+cx+' '+cy+')" fill="none" stroke="'+col+'" stroke-width="2.6"/>';}
+  function bigX(cx,cy,col){col=col||kD;var s=12;return '<g stroke="'+col+'" stroke-width="3" stroke-linecap="round"><line x1="'+(cx-s)+'" y1="'+(cy-s)+'" x2="'+(cx+s)+'" y2="'+(cy+s)+'"/><line x1="'+(cx+s)+'" y1="'+(cy-s)+'" x2="'+(cx-s)+'" y2="'+(cy+s)+'"/></g>';}
+  function bigArc(ax,ay,bx,by,lift,n,col){col=col||kD;var mx=(ax+bx)/2,my=(ay+by)/2-lift;var s='<path d="M'+ax+' '+ay+' Q'+mx+' '+my+' '+bx+' '+by+'" fill="none" stroke="'+kF+'" stroke-width="1.4" opacity="0.6"/>';for(var k=1;k<=n;k++){var t=k/(n+1);var qx=(1-t)*(1-t)*ax+2*(1-t)*t*mx+t*t*bx;var qy=(1-t)*(1-t)*ay+2*(1-t)*t*my+t*t*by;var dx=2*(1-t)*(mx-ax)+2*t*(bx-mx),dy=2*(1-t)*(my-ay)+2*t*(by-my);s+=bigOv(qx,qy,Math.atan2(dy,dx)*180/Math.PI,col);}return s;}
+  function bigPA(cx,cy,h,col){col=col||kD;var t=cy-h;return '<g stroke="'+col+'" stroke-width="3" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+cy+'"/><line x1="'+(cx-9)+'" y1="'+t+'" x2="'+(cx+9)+'" y2="'+t+'"/><line x1="'+(cx-8)+'" y1="'+(cy-h*0.6)+'" x2="'+(cx+8)+'" y2="'+(cy-h*0.42)+'"/></g>';}
+  function znote(sx,sy,tx,ty,lines,anchor){anchor=anchor||'start';var s='<line x1="'+sx+'" y1="'+sy+'" x2="'+tx+'" y2="'+ty+'" stroke="'+kO+'" stroke-width="1.4" stroke-dasharray="4 3"/><circle cx="'+sx+'" cy="'+sy+'" r="3.2" fill="'+kO+'"/>';lines.forEach(function(ln,i){s+='<text x="'+tx+'" y="'+(ty+i*17)+'" text-anchor="'+anchor+'" font-size="13.5" fill="#4a3d29"'+(i===0?' font-weight="700"':'')+'>'+ln+'</text>';});return s;}
+  function zoomHead(){return '<p style="margin:.8rem 0 .15rem;font-weight:700;color:var(--accent-deep);font-family:var(--fm);font-size:.76rem;letter-spacing:.08em">🔍 ZOOM CON NOTAS · CÓMO SE LEE</p>';}
+  function zoomRed(arcCad){var w=680,h=340,i='';var A={x:340,y:120},B={x:220,y:250},C={x:460,y:250};
+    i+=bigArc(B.x,B.y,A.x,A.y,42,arcCad,kD)+bigArc(A.x,A.y,C.x,C.y,42,arcCad,kO)+bigX(A.x,A.y)+bigX(B.x,B.y)+bigX(C.x,C.y);
+    i+=znote(275,168,20,70,['Cada óvalo = 1 cadeneta','El arco son '+arcCad+' cadenetas']);
+    i+=znote(A.x,A.y,470,110,['Punto bajo (pb)','sujeta el arco']);
+    i+=znote(B.x,B.y,60,290,['Aquí se clava el','pb de la vuelta de arriba']);
+    i+='<text x="'+(w/2)+'" y="322" text-anchor="middle" font-size="12.5" fill="#7c4f24">Se teje de abajo hacia arriba, en zig-zag · cada vuelta añade 2 arcos</text>';
+    return c_wrap(w,h,i);}
+  function zoomRound(isPA){var w=680,h=380,cx=250,cy=185,i='';i+='<circle cx="'+cx+'" cy="'+cy+'" r="16" fill="none" stroke="'+kD+'" stroke-width="3"/>';
+    [[6,20,70],[12,74,128]].forEach(function(rg,ri){var N=rg[0],ri0=rg[1],ro=rg[2],col=(ri%2===0)?kD:kO;for(var s=0;s<N;s++){var a=(s/N)*6.28318-1.5708,x1=cx+ri0*Math.cos(a),y1=cy+ri0*Math.sin(a),x2=cx+ro*Math.cos(a),y2=cy+ro*Math.sin(a);i+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round"/>';if(isPA){var f=ri0+(ro-ri0)*0.5,mx=cx+f*Math.cos(a),my=cy+f*Math.sin(a),pp=a+1.5708;i+='<line x1="'+(mx-7*Math.cos(pp)).toFixed(1)+'" y1="'+(my-7*Math.sin(pp)).toFixed(1)+'" x2="'+(mx+7*Math.cos(pp)).toFixed(1)+'" y2="'+(my+7*Math.sin(pp)).toFixed(1)+'" stroke="'+col+'" stroke-width="2.2"/>';}}});
+    i+=znote(cx,cy,470,90,['Anillo mágico','(el centro de la copa)'])+znote(cx,cy-99,470,185,['Cada rayita = 1 punto'])+znote(cx+128,cy,470,255,['Vueltas hacia afuera:','1ª=6 · 2ª=12 · 3ª=18…']);
+    i+='<text x="'+(w/2)+'" y="362" text-anchor="middle" font-size="12.5" fill="#7c4f24">Se lee del centro hacia afuera, en círculos · en los aumentos van 2 puntos juntos</text>';
+    return c_wrap(w,h,i);}
+  function zoomGrid(isPA){var w=680,h=340,X0=120,SW=70,Y0=250,RH=80,i='';
+    for(var c=0;c<=4;c++)i+=bigOv(X0+c*SW,Y0+10,0,kD);
+    for(var r=1;r<=2;r++){var col=(r%2)?kD:kO,y=Y0-(r-1)*RH;if(isPA){i+=bigOv(X0-14,y-18,72,col)+bigOv(X0-20,y-40,72,col);}else{i+=bigOv(X0-16,y-6,72,col);}for(var c2=1;c2<=4;c2++)i+= isPA? bigPA(X0+c2*SW,y+10,50,col) : bigX(X0+c2*SW,y-6,col);}
+    i+=znote(X0+2*SW,Y0+10,470,298,['Cadena de base','(se empieza abajo)']);
+    i+=znote(X0+SW,isPA?(Y0-42):(Y0-48),470,92,['Cada símbolo =',isPA?'1 punto alto':'1 punto bajo']);
+    i+=znote(X0-17,Y0-45,40,92,['Cadena de giro','al empezar la vuelta']);
+    i+='<text x="'+(w/2)+'" y="326" text-anchor="middle" font-size="12.5" fill="#7c4f24">Se lee en zig-zag: fila impar → ida, fila par ← vuelta</text>';
+    return c_wrap(w,h,i);}
 
   // ===== símbolos estándar ampliados (Craft Yarn Council) =====
   function c_plus(cx,cy,col){col=col||kD;var s=7;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+(cx-s)+'" y1="'+cy+'" x2="'+(cx+s)+'" y2="'+cy+'"/><line x1="'+cx+'" y1="'+(cy-s)+'" x2="'+cx+'" y2="'+(cy+s)+'"/></g>';}
