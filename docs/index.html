@@ -227,7 +227,7 @@
   // ---------------- CHAL / PAÑUELO ----------------
   GARMENTS.chal={
     id:"chal", label:"Chal / Pañuelo", em:"🔺",
-    defaults:{tipo:"tri", talla:"m", wingspan:155, ancho:70, largo:150, hook:4.5, cuerpo:"#b5793f", flecos:"#e9dcc2", densidad:1, largoFleco:28, addons:[]},
+    defaults:{tipo:"tri", talla:"m", wingspan:155, ancho:70, largo:150, hook:4.5, abertura:"media", cuerpo:"#b5793f", flecos:"#e9dcc2", densidad:1, largoFleco:28, addons:[]},
     fields:[
       {type:"segment",key:"tipo",label:"Forma",options:[{v:"tri",label:"Triangular",sub:"punta abajo"},{v:"rect",label:"Pañuelo",sub:"rectangular"}]},
       {type:"segment",key:"talla",label:"Talla",showIf:function(s){return s.tipo==="tri";},options:[{v:"s",label:"Pequeño",sub:"~115 cm"},{v:"m",label:"Estándar",sub:"~155 cm"},{v:"l",label:"Grande",sub:"~185 cm"},{v:"custom",label:"A medida",sub:"tú eliges"}]},
@@ -235,6 +235,7 @@
       {type:"number",key:"ancho",label:"Ancho",unit:"cm",min:20,max:120,showIf:function(s){return s.tipo==="rect";}},
       {type:"number",key:"largo",label:"Largo",unit:"cm",min:60,max:220,showIf:function(s){return s.tipo==="rect";}},
       {type:"hook",key:"hook",label:"Aguja"},
+      {type:"segment",key:"abertura",label:"Abertura de la malla",options:[{v:"cerrada",label:"Cerrada",sub:"cad 4 · tupida"},{v:"media",label:"Media",sub:"cad 5 · como el camel"},{v:"abierta",label:"Abierta",sub:"cad 6 · muy calada"}]},
       {type:"color",key:"cuerpo",label:"Color del cuerpo"},
       {type:"color",key:"flecos",label:"Color de los flecos"},
       {type:"segment",key:"densidad",label:"Densidad de flecos",options:[{v:1,label:"Normal",sub:"1 por arco"},{v:2,label:"Tupido",sub:"2 por arco"}]},
@@ -242,45 +243,52 @@
       {type:"addons",key:"addons",label:"Añadidos (flecos extra)"}
     ],
     compute:function(s){
-      var gg=g(s.hook), arcs, wing, depth, edge, rows, W, sections=[], measures=[], mats=[];
+      var gg=g(s.hook), arcs, wing, depth, edge, rows, W, sections=[], measures=[];
+      var arcCad={cerrada:4,media:5,abierta:6}[s.abertura]||5, openF={cerrada:0.86,media:1,abierta:1.16}[s.abertura]||1, aw=gg.archW*openF, perArc=0.021*arcCad;
       var bodyN=colorName(s.cuerpo), fringeN=colorName(s.flecos);
       var cut=Math.round((s.largoFleco||0)*2+5), perB=(s.strands||6)*(((s.largoFleco||0)*2/100)+0.05);
+      var muestraRed='<p><b>Muestra</b> (aguja '+hookLabel(s.hook)+'): 1 arco de '+arcCad+' cadenetas ≈ '+cm(aw)+' cm de ancho; 1 vuelta ≈ '+cm(gg.rowH)+' cm de alto. Teje flojo para que caiga.</p>'+comoMuestra()+abbrRed(arcCad);
       if(s.tipo==="tri"){
         W = s.talla==="custom"? s.wingspan : ({s:115,m:155,l:185}[s.talla]||155);
-        var n=Math.max(8,Math.round((W/gg.archW-1)/2)); arcs=2*n+1; wing=Math.round(arcs*gg.archW); depth=Math.round(n*gg.rowH); edge=n; rows=n;
-        var body=estM(n*(n+2)*0.105);
+        var n=Math.max(8,Math.round((W/aw-1)/2)); arcs=2*n+1; wing=Math.round(arcs*aw); depth=Math.round(n*gg.rowH); edge=n; rows=n;
+        var body=estM(n*(n+2)*perArc);
         measures=[["ancho",wing+" cm"],["alto",depth+" cm"],["vueltas",n],["arcos",arcs]];
         var baseB=edge*2*s.densidad+1;
-        sections.push({h:"Materiales",html:mats0()});
-        function mats0(){ var h=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.3)+' m');
-          h+=matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB*perB)+' m ('+baseB+')');
-          addonMat(s,perB,function(x){h+=x;}); return h+matNote(s.hook); }
-        sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+abbrRed()});
+        var matsH=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.3)+' m')+matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB*perB)+' m ('+baseB+')');
+        addonMat(s,perB,function(x){matsH+=x;}); matsH+=matNote(s.hook);
+        sections.push({h:"Materiales",html:matsH});
+        sections.push({h:"Muestra y abreviaturas",html:muestraRed});
         sections.push({h:"Cuerpo · de la punta hacia arriba",html:
-          '<p><b>Inicio:</b> <code>cad 6</code>, cierra en anillo con <code>pr</code>. <b>V1:</b> <code>cad 1</code>, en el anillo <code>pb, (cad 5, pb) ×3</code>. Gira. <b>(3 arcos)</b></p>'+
-          '<div class="callout"><b>Vuelta de aumento</b> (repite cada vuelta): gira, <code>cad 5, pb</code> en el 1.º arco; <code>cad 5, pb</code> otra vez en el 1.º; <code>*cad 5, pb en el siguiente arco*</code> hasta el último; <code>cad 5, pb</code> otra vez en el último. <b>(+2 arcos)</b></div>'+
+          '<p><b>Inicio:</b> <code>cad 6</code>, cierra en anillo con <code>pr</code>. <b>V1:</b> <code>cad 1</code>, en el anillo <code>pb, (cad '+arcCad+', pb) ×3</code>. Gira. <b>(3 arcos)</b></p>'+
+          '<div class="callout"><b>Vuelta de aumento</b> (repite cada vuelta): gira, <code>cad '+arcCad+', pb</code> en el 1.º arco; <code>cad '+arcCad+', pb</code> otra vez en el 1.º; <code>*cad '+arcCad+', pb en el siguiente arco*</code> hasta el último; <code>cad '+arcCad+', pb</code> otra vez en el último. <b>(+2 arcos)</b></div>'+
           '<p>Sigue hasta la <b>vuelta '+n+'</b> → <b>'+arcs+' arcos</b> ('+wing+' cm). La vuelta <i>n</i> tiene <code>2n+1</code> arcos.</p>'});
-        sections.push({h:"Bordes",html:'<ul><li><b>Borde superior:</b> 1 vuelta de <code>pb</code> (2 pb por arco) para que no ceda.</li><li><b>Lados en diagonal:</b> anuda ahí los flecos.</li></ul>'});
+        sections.push({h:"Bordes y greca",html:'<ul><li><b>Borde superior (hombros):</b> 1 vuelta de <code>pb</code>, 2 pb por arco con 1 cad entre arcos, para que no ceda.</li><li><b>Greca de los lados:</b> por cada lado en diagonal teje 1–2 vueltas de <code>pb</code> juntos (2–3 pb por arco). Queda firme y sujeta los flecos. Remate opcional con piquitos: <code>pb, cad 3, pr en el mismo pb</code> cada 2–3 puntos.</li></ul>'});
+        sections.push({h:"Detalle de encaje en la punta (opcional)",html:'<p>Para el rombo calado de algunos modelos: en las <b>3–4 primeras vueltas</b> (junto a la punta), sustituye el arco central por <code>1 pa, cad 1, 1 pa</code> y, en la vuelta siguiente, por <code>1 pa, cad 3, 1 pa</code>. Se dibuja un rombito abierto en el centro; el resto, red normal.</p>'});
       } else {
-        var ac=Math.max(6,Math.round(s.ancho/gg.archW)); rows=Math.max(6,Math.round(s.largo/gg.rowH)); arcs=ac;
-        wing=Math.round(ac*gg.archW); depth=Math.round(rows*gg.rowH); edge=0;
-        var body2=estM(ac*rows*0.12);
+        var ac=Math.max(6,Math.round(s.ancho/aw)); rows=Math.max(6,Math.round(s.largo/gg.rowH)); arcs=ac;
+        wing=Math.round(ac*aw); depth=Math.round(rows*gg.rowH); edge=0;
+        var body2=estM(ac*rows*perArc*1.1);
         measures=[["ancho",wing+" cm"],["largo",depth+" cm"],["arcos/vta",ac],["vueltas",rows]];
         var baseB2=ac*s.densidad*2;
-        sections.push({h:"Materiales",html:(function(){var h=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body2+'–'+estM(body2*1.3)+' m'); if(s.largoFleco>0){h+=matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB2*perB)+' m ('+baseB2+')');} addonMat(s,perB,function(x){h+=x;}); return h+matNote(s.hook);})()});
-        sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+abbrRed()});
+        var matsH2=matline(s.cuerpo,'Hilo del cuerpo · <b>'+esc(bodyN)+'</b>','~'+body2+'–'+estM(body2*1.3)+' m'); if(s.largoFleco>0){matsH2+=matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(baseB2*perB)+' m ('+baseB2+')');} addonMat(s,perB,function(x){matsH2+=x;}); matsH2+=matNote(s.hook);
+        sections.push({h:"Materiales",html:matsH2});
+        sections.push({h:"Muestra y abreviaturas",html:muestraRed});
         sections.push({h:"Cuerpo · pañuelo rectangular",html:
-          '<p><b>Base:</b> <code>cad '+(ac*5+1)+'</code>. <b>V1:</b> pb en la 6.ª cad, <code>*cad 5, salta 4 cad, pb*</code> hasta el final. <b>('+ac+' arcos)</b></p>'+
-          '<p><b>Vueltas siguientes:</b> gira, <code>cad 5</code>, <code>*pb en el arco, cad 5*</code> a lo largo, pb en el último arco. Repite hasta <b>'+rows+' vueltas</b> ('+depth+' cm).</p>'});
+          '<p><b>Base:</b> <code>cad '+(ac*arcCad+1)+'</code>. <b>V1:</b> pb en la '+(arcCad+1)+'.ª cad, <code>*cad '+arcCad+', salta '+(arcCad-1)+' cad, pb*</code> hasta el final. <b>('+ac+' arcos)</b></p>'+
+          '<p><b>Vueltas siguientes:</b> gira, <code>cad '+arcCad+'</code>, <code>*pb en el arco, cad '+arcCad+'*</code> a lo largo, pb en el último arco. Repite hasta <b>'+rows+' vueltas</b> ('+depth+' cm).</p>'});
         if(s.largoFleco>0) sections.push({h:"Flecos",html:fringeText(s,cut,baseB2,fringeN)+'<p class="note">En el pañuelo van en los dos lados cortos.</p>'});
       }
       if(s.tipo==="tri"&&s.largoFleco>0){ sections.push({h:"Flecos",html:fringeText(s,cut,edge*2*s.densidad+1,fringeN)+addonList(s)}); }
       else if(s.addons&&s.addons.length){ sections.push({h:"Flecos añadidos",html:addonList(s)}); }
-      sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor sin apoyar para abrir la red; no aplastes los flecos.</li><li>Cepilla y recorta los flecos parejos.</li></ul>'});
+      sections.push({h:"Acabado y bloqueo",html:'<ul><li>Esconde las hebras con la aguja lanera.</li><li>Bloquea con vapor sin apoyar para abrir la red; no aplastes los flecos.</li><li>Cepilla y recorta los flecos parejos.</li></ul>'});
+      sections.push({h:"Cuidado y lavado",html:cuidado()});
+      sections.push({h:"Consejos y errores comunes",html:consejosRed()});
       var total=(s.tipo==="tri"?(edge*2*s.densidad+1):0)+addonTotal(s);
       measures.push(["flecos",total||"—"]);
-      var diagKeyC='chal|'+s.tipo+'|'+(s.tipo==="tri"?n:(ac+'x'+rows));
-      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyC,function(){return (s.tipo==="tri"?netTriFull(n):netRectFull(ac,rows))+legRed();})});
+      var diagKeyC='chal|'+s.tipo+'|'+arcCad+'|'+(s.tipo==="tri"?n:(ac+'x'+rows));
+      sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyC,function(){return (s.tipo==="tri"?netTriFull(n):netRectFull(ac,rows))+legRed(arcCad);})});
+      sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:tecnicaRed(arcCad)});
+      sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('chal',s,{n:n,wing:wing})+'</div>'});
       return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
         svg:s.tipo==="tri"? triSVG(s):rectSVG(s,ac,rows)};
     }
@@ -316,7 +324,7 @@
       var perStitch= s.punto==="pa"?0.11:(s.punto==="pb"?0.09:0.10);
       var body=estM(across*rows*perStitch* (s.punto==="red"?0.7:1));
       sections.push({h:"Materiales",html:matline(s.cuerpo,'Hilo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.25)+' m')+(s.tipo==="bufanda"&&s.largoFleco>0?matline(s.flecos,'Flecos · <b>'+esc(fringeN)+'</b>','~'+estM(across*2*((s.largoFleco*2/100)+0.05)*6)+' m'):'')+matNote(s.hook)});
-      sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+(s.punto==="red"?abbrRed():abbrBasic())});
+      sections.push({h:"Muestra y abreviaturas",html:gaugeText(gg,s.hook)+comoMuestra()+(s.punto==="red"?abbrRed():abbrBasic())});
       if(s.tipo==="bufanda"){
         var base = s.punto==="red"? (across*5+1) : (s.punto==="pa"? across+2 : across+1);
         sections.push({h:"Cuerpo · bufanda ("+ptName+")",html:
@@ -338,6 +346,10 @@
       var diagKeyB='buf|'+s.tipo+'|'+s.punto+'|'+across+'x'+rows;
       var diagH = cachedChart(diagKeyB,function(){return s.punto==="red"?(netRectFull(across,rows)+legRed()):(gridFull(across,rows,s.punto==="pa")+(s.punto==="pa"?legPA():legPB()));});
       sections.splice(2,0,{h:"Diagrama del patrón completo",html:diagH});
+      sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:(s.punto==='red'?tecnicaRed(5):tecnicaBasico(s.punto))});
+      sections.push({h:"Cuidado y lavado",html:cuidado()});
+      sections.push({h:"Consejos y errores comunes",html:(s.punto==='red'?consejosRed():consejosBasico())});
+      sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('bufanda',s,{})+'</div>'});
       return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s):cowlSVG(s)};
     }
   };
@@ -381,24 +393,64 @@
       if(incRounds>maxShow){ incTxt+='<li>… sigue aumentando '+startSts+' puntos por vuelta (cada vuelta un '+st+' más entre aumentos) hasta la <b>V'+incRounds+'</b> → <b>'+targetSts+' puntos</b>.</li>'; }
       var sections=[];
       sections.push({h:"Materiales",html:matline(s.cuerpo,'Hilo · <b>'+esc(bodyN)+'</b>','~'+body+'–'+estM(body*1.3)+' m')+(s.pompon?matline(s.pomponColor,'Pompón · <b>'+esc(colorName(s.pomponColor))+'</b>','un poco'):'')+matNote(s.hook)});
-      sections.push({h:"Muestra y abreviaturas",html:'<p><b>Muestra</b> (aguja '+hookLabel(s.hook)+'): ~'+cm(perCm)+' '+st+' por cm. Se teje <b>en redondo</b>, en espiral o cerrando cada vuelta con <code>pr</code>. Marca el inicio de vuelta.</p>'+abbrHat(st)});
+      sections.push({h:"Muestra y abreviaturas",html:'<p><b>Muestra</b> (aguja '+hookLabel(s.hook)+'): ~'+cm(perCm)+' '+st+' por cm. Se teje <b>en redondo</b>, en espiral o cerrando cada vuelta con <code>pr</code>. Marca el inicio de vuelta.</p>'+comoMuestra()+abbrHat(st)});
       sections.push({h:"Copa · aumentos (círculo plano)",html:'<ul>'+incTxt+'</ul>'});
       sections.push({h:"Cuerpo · sin aumentos",html:'<p>Teje <b>'+straight+' vueltas</b> de <code>'+st+'</code> sin aumentar, todas de '+targetSts+' puntos, hasta que el gorro mida ~'+H+' cm.</p>'});
       sections.push({h:"Ala / borde",html:'<p>Termina con <b>2 vueltas de pb</b> (o 4-5 si quieres doblar el ala). Remata con <code>pr</code> y esconde la hebra.</p>'});
       if(s.pompon) sections.push({h:"Pompón",html:'<p>Haz un pompón de ~8-9 cm con el hilo del pompón (con las manos o con un molde), átalo fuerte y cóselo a la copa. Recórtalo redondo.</p>'});
       var diagKeyG='gorro|'+s.punto+'|'+startSts+'|'+incRounds+'|'+straight;
       sections.splice(2,0,{h:"Diagrama del patrón completo",html:cachedChart(diagKeyG,function(){return roundFull(startSts,incRounds,straight,isPA)+(isPA?legPA():legPB());})});
+      sections.splice(3,0,{h:"Puntos y técnicas paso a paso",html:tecnicaGorro(s.punto)});
+      sections.push({h:"Cuidado y lavado",html:cuidado()});
+      sections.push({h:"Consejos y errores comunes",html:consejosGorro()});
+      sections.unshift({h:"Guía rápida · cómo se hace",html:'<div class="callout">'+miniGuia('gorro',s,{})+'</div>'});
       return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s)};
     }
   };
 
   // ---------- textos reutilizables ----------
   function gaugeText(gg,mm){return '<p><b>Muestra</b> (aguja '+hookLabel(mm)+'): en red, 1 arco ≈ '+cm(gg.archW)+' cm y 1 vuelta ≈ '+cm(gg.rowH)+' cm. Teje flojo para que caiga bien. Haz una muestra pequeña y ajusta.</p>';}
-  function abbrRed(){return '<p class="note"><code>cad</code> cadeneta · <code>pb</code> punto bajo (US sc/UK dc) · <code>pr</code> punto raso · <b>arco</b> = 5 cadenetas sujetas con 1 pb · <code>(n)</code> puntos al final de la vuelta.</p>';}
+  function abbrRed(ac){ac=ac||5;return '<p class="note"><code>cad</code> cadeneta · <code>pb</code> punto bajo (US sc/UK dc) · <code>pr</code> punto raso · <b>arco</b> = '+ac+' cadenetas sujetas con 1 pb · <code>(n)</code> puntos al final de la vuelta.</p>';}
   function abbrBasic(){return '<p class="note"><code>cad</code> cadeneta · <code>pb</code> punto bajo · <code>pa</code> punto alto · <code>pr</code> punto raso.</p>';}
   function abbrHat(st){return '<p class="note"><code>'+st+'</code> '+(st==="pa"?"punto alto":"punto bajo")+' · <code>aum</code> aumento (2 puntos en el mismo) · <code>pr</code> punto raso · anillo mágico para empezar.</p>';}
   function matNote(mm){return '<p class="note">Aguja de ganchillo <b>'+hookLabel(mm)+'</b>, aguja lanera y tijeras. Cantidades de hilo <i>aproximadas</i>: compra con margen.</p>';}
   function fringeText(s,cut,count,fringeN){return '<p>Corta hebras de <b>~'+cut+' cm</b> ('+(s.strands||6)+' hebras por fleco). Dobla, pasa el bucle por el borde, mete las puntas y aprieta (nudo de alondra). Coloca <b>'+count+' flecos</b> en '+esc(fringeN)+'.</p><p class="note">Para el efecto peludo, usa alpaca o mohair y cepilla los flecos al terminar.</p>';}
+
+  // ===== contenido detallado (guías, técnicas, consejos, cuidado) =====
+  function paso(t,d){return '<p style="margin:.45rem 0"><b>'+t+'.</b> '+d+'</p>';}
+  function miniGuia(garment,s,e){
+    var pasos;
+    if(garment==='chal'){
+      if(s.tipo==='tri') pasos=['<b>La punta</b> — empiezas por abajo, con un anillo y 3 arcos.','<b>La red</b> — subes en vueltas de arcos (cadenetas sujetas con punto bajo), <b>aumentando 2 arcos por vuelta</b>; el triángulo se ensancha.','<b>El tamaño</b> — sigues hasta la <b>vuelta '+e.n+'</b> ('+e.wing+' cm de ancho) y rematas el borde de arriba (va en los hombros).','<b>La greca</b> — una banda tupida por los dos lados en diagonal.','<b>Los flecos</b> — los anudas en esos dos lados. ¡Chal terminado!'];
+      else pasos=['<b>La base</b> — una cadena del ancho que quieras.','<b>La red</b> — tejes vueltas de arcos hasta el largo.','<b>Los flecos</b> — (si quieres) en los dos lados cortos.','<b>Bloqueo</b> — mojas o planchas con vapor para abrir la red.'];
+    } else if(garment==='bufanda'){
+      if(s.tipo==='bufanda') pasos=['<b>La base</b> — una cadena del ancho de la bufanda.','<b>El largo</b> — tejes vueltas del punto elegido hasta el largo.','<b>Los flecos</b> — (si quieres) en los dos extremos.','<b>Bloqueo</b> — vapor suave.'];
+      else pasos=['<b>El anillo</b> — cadena de base y ciérrala en aro, sin retorcer.','<b>En redondo</b> — tejes vueltas alrededor hasta el alto.','<b>Remate</b> — cierras y escondes hebras.','<b>Bloqueo</b> — vapor suave.'];
+    } else {
+      pasos=['<b>El centro</b> — anillo mágico en lo alto de la copa.','<b>La copa</b> — aumentas en círculo hasta el diámetro de la cabeza.','<b>El cuerpo</b> — sigues sin aumentar hasta el alto.','<b>El ala</b> — rematas con un borde.', s.pompon?'<b>El pompón</b> — lo haces y lo coses arriba.':'<b>Listo</b> — escondes las hebras.'];
+    }
+    var h='<ol style="margin:.2rem 0 0;padding-left:1.2rem">';pasos.forEach(function(p){h+='<li style="margin:.32rem 0">'+p+'</li>';});return h+'</ol>';
+  }
+  function tecnicaRed(arcCad){return paso('Anillo mágico','Enrolla el hilo dos veces en los dedos formando un aro; mete el ganchillo, saca una lazada y haz 1 cadeneta de sujeción. Teje dentro del aro los puntos de la 1ª vuelta y, al final, tira de la hebra suelta para cerrar el agujero.')
+    +paso('El arco (punto de red)','Un arco son <b>'+arcCad+' cadenetas</b> seguidas, sujetas con <b>1 punto bajo</b> clavado en el centro del arco de la vuelta de abajo. Repitiendo arcos se forma la red de rombos.')
+    +paso('Aumentar en la red','Al principio y al final de la vuelta trabaja <b>2 arcos en el mismo arco</b> (en lugar de 1). Así ganas 2 arcos por vuelta y el triángulo se abre.')
+    +paso('Cambio de color','Cuando falte el último paso del punto anterior al cambio, da la última lazada ya con el color nuevo: el cambio queda limpio.')
+    +paso('La greca (borde firme)','Banda más tupida del borde: 1–2 vueltas de puntos bajos muy juntos (2–3 pb por arco). Queda firme y sujeta bien los flecos.')
+    +paso('Nudo de alondra (flecos)','Dobla el manojo de hebras por la mitad; pasa el bucle doblado por el arco del borde, mete las puntas por dentro del bucle y aprieta.');}
+  function tecnicaBasico(st){return paso('Empezar','En plano, con una cadena de base del ancho; en redondo, con anillo mágico.')
+    +paso(st==='pa'?'Punto alto (pa)':'Punto bajo (pb)', st==='pa'?'Echa hebra, clava el ganchillo, saca lazada (3 en la aguja) y cierra de 2 en 2. Alto y con caída, avanza rápido.':'Clava el ganchillo, saca lazada (2 en la aguja), echa hebra y pasa por las 2. Bajito y tupido, abriga más.')
+    +paso('Cadena de giro','Al girar, sube con '+(st==='pa'?'3 cadenetas (cuentan como el 1er punto alto)':'1 cadeneta')+'.')
+    +paso('Cambio de color','Da la última lazada del punto anterior con el color nuevo.');}
+  function tecnicaGorro(st){return paso('Anillo mágico','Aro de hilo en los dedos; ganchillo dentro, saca lazada, 1 cadeneta y teje los puntos de la V1. Cierra tirando de la hebra.')
+    +paso('Trabajar en redondo','En espiral (marca el inicio) o cerrando cada vuelta con 1 punto raso. No gires: siempre por el mismo lado.')
+    +paso('Aumento (2 en 1)','Para que la copa crezca plana, en las vueltas de aumento haces 2 puntos en el mismo punto, repartidos como dice el patrón.')
+    +paso('Cuándo dejar de aumentar','Cuando el círculo mida (contorno de la cabeza ÷ 3,14) o cuando te encaje al probártelo. A partir de ahí, sin aumentos.')
+    +paso(st==='pa'?'Punto alto':'Punto bajo', st==='pa'?'Rápido y con caída.':'Tupido y calentito, ideal para invierno.');}
+  function consejosRed(){return '<p><b>Trucos:</b></p><ul><li>Cuenta los arcos cada pocas vueltas: deben aumentar <b>de 2 en 2</b>.</li><li>Pon un <b>marcador</b> en el primer arco de cada vuelta.</li><li>Teje <b>flojo</b>: la red bonita necesita caída.</li></ul><p><b>Fallos típicos:</b></p><ul><li>Cadenetas apretadas → la red no cae. Aflójalas.</li><li>Saltarse el <b>arco del final</b> al girar → borde torcido.</li><li>Flecos desiguales → recórtalos parejos al terminar.</li></ul>';}
+  function consejosGorro(){return '<p><b>Trucos:</b></p><ul><li><b>Pruébatelo</b> al llegar al diámetro de la copa antes de dejar de aumentar.</li><li>Marca el <b>inicio de vuelta</b>.</li></ul><p><b>Fallos típicos:</b></p><ul><li>Copa <b>puntiaguda</b> (gorro de bruja) → falta aumentar.</li><li>Copa <b>ondulada</b> (volante) → has aumentado de más.</li></ul>';}
+  function consejosBasico(){return '<p><b>Trucos:</b></p><ul><li>Mantén el <b>mismo nº de puntos</b> en cada vuelta.</li><li>Marca el borde para no perder cuentas.</li></ul><p><b>Fallos típicos:</b></p><ul><li>Que se estreche → se escapan puntos en los bordes.</li></ul>';}
+  function cuidado(){return '<ul><li><b>Lavado a mano</b> en agua fría o templada con jabón suave. No frotes ni retuerzas.</li><li><b>Secado en horizontal</b> sobre una toalla, dándole la forma. Nada de secadora ni colgarlo (se deforma).</li><li>Si es <b>lana o alpaca</b>, mejor lavado en seco o programa muy delicado.</li><li>Cepilla con suavidad los <b>flecos peludos</b> para reavivarlos.</li></ul>';}
+  function comoMuestra(){return '<p class="note"><b>Haz siempre una muestra antes:</b> teje un cuadradito de ~15 cm, bloquéalo (mójalo o plánchalo con vapor sin apretar) y mide cuántos puntos/arcos entran en 10 cm. Si te salen <b>más</b> que en el patrón, prueba una aguja <b>más gruesa</b>; si <b>menos</b>, una <b>más fina</b>.</p>';}
   function addonMat(s,perB,put){ var map=addonMap(s); for(var c in map){ put(matline(c,'Flecos añadidos · <b>'+esc(colorName(c))+'</b>','~'+estM(map[c]*perB)+' m ('+map[c]+')')); } }
   function addonMap(s){var m={}; (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0; if(q)m[a.color]=(m[a.color]||0)+q;}); return m;}
   function addonTotal(s){var t=0;(s.addons||[]).forEach(function(a){t+=parseInt(a.qty,10)||0;});return t;}
@@ -475,7 +527,7 @@
 
   function miniSym(fn){return '<svg width="30" height="26" viewBox="0 0 30 26">'+fn(15,13)+'</svg>';}
   function legendHTML(items){var h='<div class="legend">';items.forEach(function(it){h+='<span class="lg"><span class="lgs">'+it.s+'</span>'+esc(it.t)+'</span>';});return h+'</div>';}
-  function legRed(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad (cadeneta)"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"},{s:miniSym(function(x,y){return c_arc(x-11,y+3,x+11,y+3,9,kD,5);}),t:"arco = 5 cad"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (punto raso)"}]);}
+  function legRed(ac){ac=ac||5;return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad (cadeneta)"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"},{s:miniSym(function(x,y){return c_arc(x-11,y+3,x+11,y+3,9,kD,5);}),t:"arco = "+ac+" cad"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (punto raso)"}]);}
   function legPA(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_pa(x,y+11,22,kD);}),t:"pa (punto alto)"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (raso)"}]);}
   function legPB(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"}]);}
 
