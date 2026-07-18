@@ -108,6 +108,14 @@
   .chartbox svg{display:block; width:100%; height:auto; min-width:280px; max-width:520px; margin:0 auto;}
   .legend{display:flex; flex-wrap:wrap; gap:.4rem .9rem; font-size:.82rem; color:var(--ink-soft); margin-top:.3rem;}
   .legend .lg{display:inline-flex; align-items:center; gap:.35rem;} .legend .lgs svg{display:block;}
+  #glossary .card > h2{font-size:1.15rem;}
+  .gtable{width:100%; border-collapse:collapse; font-size:.88rem;}
+  .gtable th,.gtable td{padding:.42rem .6rem; border-bottom:1px solid var(--line-soft); text-align:left; vertical-align:top;}
+  .gtable th{font-family:var(--fm); font-size:.66rem; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); font-weight:600;}
+  .gtable .es{font-weight:700;} .gtable .ab{font-family:var(--fm); color:var(--accent-deep);}
+  .symgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.5rem;}
+  .symcell{display:flex; align-items:center; gap:.6rem; border:1px solid var(--line); border-radius:9px; padding:.45rem .55rem; background:var(--surface); font-size:.82rem;}
+  .symcell svg{flex:none; background:#fff; border-radius:5px;}
   .matline{display:flex; align-items:center; gap:.5rem; padding:.26rem 0; border-bottom:1px dotted var(--line-soft); font-size:.9rem;} .matline:last-child{border-bottom:0;}
   .matline .dot{width:15px;height:15px;border-radius:50%;box-shadow:0 0 0 1px var(--line);flex:none;} .matline .m{margin-left:auto; font-family:var(--fm); font-size:.82rem; color:var(--ink-soft); white-space:nowrap;}
   .note{font-size:.82rem; color:var(--ink-soft);}
@@ -166,6 +174,8 @@
       <div class="pattern" id="pattern"></div>
     </div>
   </div>
+
+  <div id="glossary" class="no-print" hidden></div>
 
   <p class="foot no-print">Hecho con <span class="heart">♥</span> · tus diseños se guardan en este dispositivo · funciona sin internet</p>
 </div>
@@ -431,6 +441,75 @@
   function legPA(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_pa(x,y+11,22,kD);}),t:"pa (punto alto)"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (raso)"}]);}
   function legPB(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"}]);}
 
+  // ===== símbolos estándar ampliados (Craft Yarn Council) =====
+  function c_plus(cx,cy,col){col=col||kD;var s=7;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+(cx-s)+'" y1="'+cy+'" x2="'+(cx+s)+'" y2="'+cy+'"/><line x1="'+cx+'" y1="'+(cy-s)+'" x2="'+cx+'" y2="'+(cy+s)+'"/></g>';}
+  function c_hdc(cx,cy,h,col){col=col||kD;h=h||22;var t=cy-h;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+cy+'"/><line x1="'+(cx-6.5)+'" y1="'+t+'" x2="'+(cx+6.5)+'" y2="'+t+'"/></g>';}
+  function c_stemTicks(cx,cy,h,fs,col){col=col||kD;var t=cy-h;var s='<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+cy+'"/><line x1="'+(cx-6.5)+'" y1="'+t+'" x2="'+(cx+6.5)+'" y2="'+t+'"/>';fs.forEach(function(f){var y=cy-h*f;s+='<line x1="'+(cx-5.5)+'" y1="'+(y+3)+'" x2="'+(cx+5.5)+'" y2="'+(y-3)+'"/>';});return s+'</g>';}
+  function c_tr(cx,cy,h,col){return c_stemTicks(cx,cy,h||24,[0.62,0.44],col);}
+  function c_dtr(cx,cy,h,col){return c_stemTicks(cx,cy,h||27,[0.68,0.5,0.32],col);}
+  function c_dc2tog(cx,cy,col){col=col||kD;var h=24,t=cy-h;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+(cx-8)+'" y2="'+cy+'"/><line x1="'+cx+'" y1="'+t+'" x2="'+(cx+8)+'" y2="'+cy+'"/><line x1="'+(cx-8)+'" y1="'+t+'" x2="'+(cx+8)+'" y2="'+t+'"/><line x1="'+(cx-6)+'" y1="'+(cy-h*0.55)+'" x2="'+(cx-1)+'" y2="'+(cy-h*0.55+4)+'"/><line x1="'+(cx+1)+'" y1="'+(cy-h*0.55)+'" x2="'+(cx+6)+'" y2="'+(cy-h*0.55+4)+'"/></g>';}
+  function c_shell(cx,cy,n,col){col=col||kD;n=n||5;var s='<g stroke="'+col+'" stroke-width="1.8" stroke-linecap="round">',span=40,h=24;for(var k=0;k<n;k++){var fx=cx+(-span/2+span*k/(n-1));s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+fx.toFixed(1)+'" y2="'+(cy-h)+'"/>';var my=cy-h*0.5,mx=(cx+fx)/2;s+='<line x1="'+(mx-3)+'" y1="'+(my+2)+'" x2="'+(mx+3)+'" y2="'+(my-2)+'"/>';}return s+'</g>';}
+  function c_popcorn(cx,cy,col){col=col||kD;var h=26,s='<g stroke="'+col+'" stroke-width="1.7" fill="none">';for(var k=-2;k<=2;k++)s+='<path d="M'+cx+' '+cy+' Q'+(cx+k*8)+' '+(cy-h/2)+' '+cx+' '+(cy-h)+'"/>';return s+'<line x1="'+(cx-9)+'" y1="'+(cy-h)+'" x2="'+(cx+9)+'" y2="'+(cy-h)+'" stroke-width="2.2"/></g>';}
+  function c_bobble(cx,cy,col){col=col||kD;var h=26,s='<g stroke="'+col+'" stroke-width="1.7" fill="none"><ellipse cx="'+cx+'" cy="'+(cy-h/2)+'" rx="10" ry="'+(h/2)+'"/>';for(var k=-1;k<=1;k++)s+='<line x1="'+(cx+k*5)+'" y1="'+(cy-h+3)+'" x2="'+(cx+k*5)+'" y2="'+(cy-3)+'"/>';return s+'</g>';}
+  function c_picot(cx,cy,col){col=col||kD;return c_ov(cx-7,cy-2,55,col)+c_ov(cx,cy-8,0,col)+c_ov(cx+7,cy-2,-55,col)+c_dot(cx,cy+4,col);}
+  function c_fpdc(cx,cy,col){col=col||kD;var h=22,t=cy-h;return '<g stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+(cy-5)+'"/><line x1="'+(cx-6)+'" y1="'+t+'" x2="'+(cx+6)+'" y2="'+t+'"/><line x1="'+(cx-5)+'" y1="'+(t+8)+'" x2="'+(cx+5)+'" y2="'+(t+11)+'"/><path d="M'+cx+' '+(cy-5)+' q8 3 4 9 q-4 3 -8 0"/></g>';}
+  function c_bpdc(cx,cy,col){col=col||kD;var h=22,t=cy-h;return '<g stroke="'+col+'" stroke-width="2" fill="none" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+(cy-5)+'"/><line x1="'+(cx-6)+'" y1="'+t+'" x2="'+(cx+6)+'" y2="'+t+'"/><line x1="'+(cx-5)+'" y1="'+(t+8)+'" x2="'+(cx+5)+'" y2="'+(t+11)+'"/><path d="M'+cx+' '+(cy-5)+' q-8 3 -4 9 q4 3 8 0"/></g>';}
+  function c_blo(cx,cy,col){col=col||kD;return '<path d="M'+(cx-9)+' '+cy+' Q'+cx+' '+(cy-10)+' '+(cx+9)+' '+cy+'" fill="none" stroke="'+col+'" stroke-width="2"/>';}
+  function c_flo(cx,cy,col){col=col||kD;return '<path d="M'+(cx-9)+' '+cy+' Q'+cx+' '+(cy+10)+' '+(cx+9)+' '+cy+'" fill="none" stroke="'+col+'" stroke-width="2"/>';}
+  function c_startRow(cx,cy,col){col=col||kD;return '<path d="M'+(cx-8)+' '+(cy-8)+' L'+(cx+9)+' '+cy+' L'+(cx-8)+' '+(cy+8)+' Z" fill="'+col+'"/>';}
+  function c_finishRow(cx,cy,col){col=col||kD;return '<path d="M'+(cx+8)+' '+(cy-8)+' L'+(cx-9)+' '+cy+' L'+(cx+8)+' '+(cy+8)+' Z" fill="'+col+'"/>';}
+
+  // ===== Glosario =====
+  var GLOS_TERMS=[
+    {es:"Cadeneta",ab:"cad",us:"chain (ch)",uk:"chain (ch)"},
+    {es:"Punto raso / enano",ab:"pr",us:"slip stitch (sl st)",uk:"slip stitch (ss)"},
+    {es:"Punto bajo",ab:"pb",us:"single crochet (sc)",uk:"double crochet (dc)"},
+    {es:"Punto medio alto",ab:"pma",us:"half double crochet (hdc)",uk:"half treble (htr)"},
+    {es:"Punto alto / vareta",ab:"pa",us:"double crochet (dc)",uk:"treble (tr)"},
+    {es:"Punto alto doble",ab:"pad",us:"treble (tr)",uk:"double treble (dtr)"},
+    {es:"Punto alto triple",ab:"pat",us:"double treble (dtr)",uk:"triple treble (trtr)"},
+    {es:"Aumento (2 pts en 1)",ab:"aum",us:"increase (inc)",uk:"increase (inc)"},
+    {es:"Disminución (2 pts juntos)",ab:"dism",us:"decrease / ..2tog",uk:"decrease / ..2tog"},
+    {es:"Anillo mágico",ab:"am",us:"magic ring (MR)",uk:"magic ring (MR)"},
+    {es:"Abanico / concha",ab:"—",us:"shell",uk:"shell"},
+    {es:"Piña / palomita",ab:"—",us:"popcorn",uk:"popcorn"},
+    {es:"Garbanzo / borla",ab:"—",us:"bobble / puff",uk:"bobble / puff"},
+    {es:"Picot",ab:"—",us:"picot",uk:"picot"},
+    {es:"Punto relieve por delante",ab:"pr.del",us:"front post (FPdc)",uk:"raised front (rf)"},
+    {es:"Punto relieve por detrás",ab:"pr.det",us:"back post (BPdc)",uk:"raised back (rb)"}
+  ];
+  var GLOS_SYMS=[
+    {d:function(x,y){return c_ov(x,y,0,kD);},n:"Cadeneta (cad)"},
+    {d:function(x,y){return c_dot(x,y,kD);},n:"Punto raso (pr)"},
+    {d:function(x,y){return c_x(x,y,kD);},n:"Punto bajo (pb) · ✕"},
+    {d:function(x,y){return c_plus(x,y,kD);},n:"Punto bajo (pb) · +"},
+    {d:function(x,y){return c_hdc(x,y+11,20,kD);},n:"Punto medio alto (pma)"},
+    {d:function(x,y){return c_pa(x,y+12,22,kD);},n:"Punto alto (pa)"},
+    {d:function(x,y){return c_tr(x,y+13,24,kD);},n:"Punto alto doble (pad)"},
+    {d:function(x,y){return c_dtr(x,y+14,26,kD);},n:"Punto alto triple"},
+    {d:function(x,y){return c_dc2tog(x,y+12,kD);},n:"Disminución (2 pa juntos)"},
+    {d:function(x,y){return c_shell(x,y+12,5,kD);},n:"Abanico (5 pa)"},
+    {d:function(x,y){return c_popcorn(x,y+12,kD);},n:"Piña / palomita"},
+    {d:function(x,y){return c_bobble(x,y+12,kD);},n:"Garbanzo / borla"},
+    {d:function(x,y){return c_picot(x,y,kD);},n:"Picot (cad-3)"},
+    {d:function(x,y){return c_fpdc(x,y+11,kD);},n:"Relieve por delante"},
+    {d:function(x,y){return c_bpdc(x,y+11,kD);},n:"Relieve por detrás"},
+    {d:function(x,y){return c_blo(x,y+3,kD);},n:"Solo hebra de atrás"},
+    {d:function(x,y){return c_flo(x,y-3,kD);},n:"Solo hebra de delante"},
+    {d:function(x,y){return c_arc(x-12,y+2,x+12,y+2,9,kD,5);},n:"Arco = 5 cadenetas"},
+    {d:function(x,y){return c_startRow(x,y,kD);},n:"Empieza la vuelta"},
+    {d:function(x,y){return c_finishRow(x,y,kD);},n:"Termina la vuelta"}
+  ];
+  function renderGlossary(){var g=$("#glossary");var h='';
+    h+='<div class="card"><h2>📖 Glosario de términos</h2><p class="note" style="margin:.1rem 0 .7rem">⚠️ Ojo: el mismo nombre significa <b>puntos distintos</b> en EE.UU. (US) y Reino Unido (UK). Esta app usa términos en español.</p><div style="overflow-x:auto"><table class="gtable"><thead><tr><th>Español</th><th>Abrev.</th><th>US (americano)</th><th>UK (británico)</th></tr></thead><tbody>';
+    GLOS_TERMS.forEach(function(t){h+='<tr><td class="es">'+esc(t.es)+'</td><td class="ab">'+esc(t.ab)+'</td><td>'+esc(t.us)+'</td><td>'+esc(t.uk)+'</td></tr>';});
+    h+='</tbody></table></div></div>';
+    h+='<div class="card"><h2>✳️ Glosario de símbolos</h2><p class="note" style="margin:.1rem 0 .7rem">Símbolos estándar del Craft Yarn Council. Cada símbolo representa el punto tal como se ve por el derecho de la labor.</p><div class="symgrid">';
+    GLOS_SYMS.forEach(function(sy){h+='<div class="symcell"><svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">'+sy.d(18,18)+'</svg><span>'+esc(sy.n)+'</span></div>';});
+    h+='</div></div>';
+    g.innerHTML=h;}
+  function setView(){var glos=(app.current==='glosario');var gr=document.querySelector('.grid');if(gr)gr.style.display=glos?'none':'';var gl=$("#glossary");if(gl){gl.hidden=!glos;if(glos)renderGlossary();}}
+
   // ---------- previews SVG ----------
   function meshDefs(id,body){return '<defs><pattern id="'+id+'" width="15" height="15" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="15" height="15" fill="'+body+'"/><path d="M0 0H15M0 0V15" stroke="rgba(255,255,255,.28)" stroke-width="1.3"/></pattern></defs>';}
   function fringeAlong(x1,y1,x2,y2,count,color,dx,dy){var s='';count=Math.max(1,Math.min(count,16));for(var i=0;i<count;i++){var t=(i+0.5)/count,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;s+='<line x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+(x+dx).toFixed(1)+'" y2="'+(y+dy).toFixed(1)+'" stroke="'+color+'" stroke-width="3.2" stroke-linecap="round" opacity="0.9"/>';}return s;}
@@ -466,7 +545,8 @@
   function freshState(gid){var g0=GARMENTS[gid]; var st=JSON.parse(JSON.stringify(g0.defaults)); st.strands=6; if(st.addons)st.addons=[]; return st;}
   function initStates(){ order.forEach(function(gid){ app.state[gid]=freshState(gid); }); }
 
-  function buildTabs(){ var t=$("#gtabs"); t.innerHTML=''; order.forEach(function(gid){ var G=GARMENTS[gid]; var b=el('button',{type:'button','class':'gtab','data-g':gid},'<span class="em">'+G.em+'</span> '+G.label); b.addEventListener('click',function(){ app.current=gid; syncTabs(); buildControls(); update(); }); t.appendChild(b); }); }
+  function buildTabs(){ var t=$("#gtabs"); t.innerHTML=''; order.forEach(function(gid){ var G=GARMENTS[gid]; var b=el('button',{type:'button','class':'gtab','data-g':gid},'<span class="em">'+G.em+'</span> '+G.label); b.addEventListener('click',function(){ app.current=gid; syncTabs(); setView(); buildControls(); update(); }); t.appendChild(b); });
+    var gb=el('button',{type:'button','class':'gtab','data-g':'glosario'},'<span class="em">📖</span> Glosario'); gb.addEventListener('click',function(){ app.current='glosario'; syncTabs(); setView(); }); t.appendChild(gb); }
   function syncTabs(){ Array.prototype.forEach.call($("#gtabs").children,function(b){ b.setAttribute('aria-pressed', b.getAttribute('data-g')===app.current); }); }
 
   function st(){ return app.state[app.current]; }
@@ -528,7 +608,7 @@
 
   // ---------- init ----------
   try{
-    initStates(); buildTabs(); syncTabs(); buildControls(); bind(); renderSaved(); update(); showInstallHint();
+    initStates(); buildTabs(); syncTabs(); buildControls(); bind(); renderSaved(); update(); setView(); showInstallHint();
     try{ if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(function(){}); } }catch(_){}
   }catch(err){ var b=document.getElementById('errbar'); if(b){ b.textContent='⚠️ No se pudo iniciar: '+err.message+'. Abre el enlace en Chrome o Safari.'; b.style.display='block'; } }
 })();
