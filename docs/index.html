@@ -104,6 +104,10 @@
   .pattern p{margin:.5rem 0;} .pattern ul,.pattern ol{margin:.5rem 0; padding-left:1.2rem;} .pattern li{margin:.28rem 0;}
   .pattern code{font-family:var(--fm); font-size:.85em; background:var(--inset); padding:.05em .35em; border-radius:4px; color:var(--accent-deep);}
   .callout{background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:.75rem .95rem; margin:.75rem 0; font-size:.92rem;}
+  .chartbox{overflow-x:auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:.6rem; margin:.4rem 0 .7rem;}
+  .chartbox svg{display:block; width:100%; height:auto; min-width:280px; max-width:520px; margin:0 auto;}
+  .legend{display:flex; flex-wrap:wrap; gap:.4rem .9rem; font-size:.82rem; color:var(--ink-soft); margin-top:.3rem;}
+  .legend .lg{display:inline-flex; align-items:center; gap:.35rem;} .legend .lgs svg{display:block;}
   .matline{display:flex; align-items:center; gap:.5rem; padding:.26rem 0; border-bottom:1px dotted var(--line-soft); font-size:.9rem;} .matline:last-child{border-bottom:0;}
   .matline .dot{width:15px;height:15px;border-radius:50%;box-shadow:0 0 0 1px var(--line);flex:none;} .matline .m{margin-left:auto; font-family:var(--fm); font-size:.82rem; color:var(--ink-soft); white-space:nowrap;}
   .note{font-size:.82rem; color:var(--ink-soft);}
@@ -264,6 +268,7 @@
       sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor sin apoyar para abrir la red; no aplastes los flecos.</li><li>Cepilla y recorta los flecos parejos.</li></ul>'});
       var total=(s.tipo==="tri"?(edge*2*s.densidad+1):0)+addonTotal(s);
       measures.push(["flecos",total||"—"]);
+      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:netChart()+legRed()});
       return {title:s.tipo==="tri"?"Chal triangular de red":"Pañuelo rectangular de red", psub:"Punto de arcos · "+wing+"×"+depth+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections,
         svg:s.tipo==="tri"? triSVG(s):rectSVG(s,ac,rows)};
     }
@@ -318,6 +323,8 @@
           '<p class="note">Se teje en redondo (tubo). Puedes doblarlo para llevarlo doble.</p>'});
       }
       sections.push({h:"Acabado",html:'<ul><li>Esconde las hebras.</li><li>Bloquea con vapor suave.</li>'+(s.tipo==="bufanda"&&s.largoFleco>0?'<li>Recorta los flecos parejos.</li>':'')+'</ul>'});
+      var diagH = s.punto==="red"?(netChart()+legRed()):(s.punto==="pa"?(gridChart(true)+legPA()):(gridChart(false)+legPB()));
+      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:diagH});
       return {title:(s.tipo==="bufanda"?"Bufanda":"Cuello")+" en "+ptName, psub:W+(s.tipo==="bufanda"?"×"+H:" cm contorno")+" · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:s.tipo==="bufanda"?scarfSVG(s):cowlSVG(s)};
     }
   };
@@ -366,6 +373,7 @@
       sections.push({h:"Cuerpo · sin aumentos",html:'<p>Teje <b>'+straight+' vueltas</b> de <code>'+st+'</code> sin aumentar, todas de '+targetSts+' puntos, hasta que el gorro mida ~'+H+' cm.</p>'});
       sections.push({h:"Ala / borde",html:'<p>Termina con <b>2 vueltas de pb</b> (o 4-5 si quieres doblar el ala). Remata con <code>pr</code> y esconde la hebra.</p>'});
       if(s.pompon) sections.push({h:"Pompón",html:'<p>Haz un pompón de ~8-9 cm con el hilo del pompón (con las manos o con un molde), átalo fuerte y cóselo a la copa. Recórtalo redondo.</p>'});
+      sections.splice(2,0,{h:"Diagrama de puntos (gráfico)",html:roundChart(startSts,isPA)+(isPA?legPA():legPB())});
       return {title:"Gorro en "+(isPA?"punto alto":"punto bajo"), psub:"Talla "+(s.talla==="custom"?"a medida":s.talla)+" · contorno ~"+Math.round(hatCirc)+" cm · aguja "+hookLabel(s.hook), measures:measures, sections:sections, svg:hatSVG(s)};
     }
   };
@@ -383,6 +391,45 @@
   function addonList(s){ if(!(s.addons&&s.addons.filter(function(a){return (parseInt(a.qty,10)||0)>0;}).length)) return ''; var h='<p><b>Añadidos:</b></p><ul>'; (s.addons||[]).forEach(function(a){var q=parseInt(a.qty,10)||0; if(!q)return; h+='<li><b>'+q+' flecos</b> en <b>'+esc(zonaText(a.zona))+'</b>, color '+esc(colorName(a.color))+' <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+a.color+';box-shadow:0 0 0 1px var(--line);vertical-align:middle"></span></li>';}); return h+'</ul>'; }
   var ZONAS=[{v:"orilla",t:"toda la orilla inferior (los 2 lados)"},{v:"izq",t:"solo el lado izquierdo"},{v:"der",t:"solo el lado derecho"},{v:"punta",t:"solo la punta"},{v:"arriba",t:"borde superior"}];
   function zonaText(v){for(var i=0;i<ZONAS.length;i++)if(ZONAS[i].v===v)return ZONAS[i].t; return v;}
+
+  // ===== Diagramas de símbolos (gráfico de puntos, estilo patrón real) =====
+  var kD="#2b2620", kO="#c07a2a", kF="#c3b291";
+  function c_ov(cx,cy,ang,col){return '<ellipse cx="'+(+cx).toFixed(1)+'" cy="'+(+cy).toFixed(1)+'" rx="6.2" ry="2.9" transform="rotate('+(+ang).toFixed(1)+' '+(+cx).toFixed(1)+' '+(+cy).toFixed(1)+')" fill="none" stroke="'+(col||kD)+'" stroke-width="1.7"/>';}
+  function c_dot(cx,cy,col){return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="4.6" ry="2.5" fill="'+(col||kD)+'"/>';}
+  function c_x(cx,cy,col){col=col||kD;var s=6.5;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+(cx-s)+'" y1="'+(cy-s)+'" x2="'+(cx+s)+'" y2="'+(cy+s)+'"/><line x1="'+(cx+s)+'" y1="'+(cy-s)+'" x2="'+(cx-s)+'" y2="'+(cy+s)+'"/></g>';}
+  function c_pa(cx,cy,h,col){col=col||kD;h=h||30;var t=cy-h;return '<g stroke="'+col+'" stroke-width="2" stroke-linecap="round"><line x1="'+cx+'" y1="'+t+'" x2="'+cx+'" y2="'+cy+'"/><line x1="'+(cx-6.5)+'" y1="'+t+'" x2="'+(cx+6.5)+'" y2="'+t+'"/><line x1="'+(cx-5.5)+'" y1="'+(cy-h*0.6)+'" x2="'+(cx+5.5)+'" y2="'+(cy-h*0.4)+'"/></g>';}
+  function c_arc(ax,ay,bx,by,lift,col,n){n=n||5;col=col||kD;var mx=(ax+bx)/2,my=(ay+by)/2-lift;var s='<path d="M'+ax+' '+ay+' Q'+mx+' '+my+' '+bx+' '+by+'" fill="none" stroke="'+kF+'" stroke-width="1" opacity="0.55"/>';for(var k=1;k<=n;k++){var t=k/(n+1);var qx=(1-t)*(1-t)*ax+2*(1-t)*t*mx+t*t*bx;var qy=(1-t)*(1-t)*ay+2*(1-t)*t*my+t*t*by;var dx=2*(1-t)*(mx-ax)+2*t*(bx-mx),dy=2*(1-t)*(my-ay)+2*t*(by-my);s+=c_ov(qx,qy,Math.atan2(dy,dx)*180/Math.PI,col);}return s;}
+  function c_wrap(w,h,inner){return '<div class="chartbox"><svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama de puntos">'+inner+'</svg></div>';}
+  function netChart(){var X0=52,Y0=232,CW=54,RH=46,R=4,C=5,W=X0+2*C*(CW/2)+30,H=272,nodes={},inner='';
+    function K(i,r){return i+'_'+r;}
+    for(var r=0;r<=R;r++)for(var i=0;i<=2*C;i++)if((i+r)%2===0)nodes[K(i,r)]={x:X0+i*(CW/2),y:Y0-r*RH};
+    for(var r2=0;r2<R;r2++){var col=(r2%2===0)?kD:kO;for(var i2=0;i2<=2*C;i2++){var a=nodes[K(i2,r2)];if(!a)continue;[[i2-1,r2+1],[i2+1,r2+1]].forEach(function(p){var b=nodes[K(p[0],p[1])];if(b)inner+=c_arc(a.x,a.y,b.x,b.y,RH*0.42,col,5);});}}
+    for(var k in nodes)inner+=c_x(nodes[k].x,nodes[k].y,kD);
+    inner+='<text x="'+(X0+C*CW/2)+'" y="'+(Y0+24)+'" text-anchor="middle" font-size="12" fill="#7c4f24">▲ inicio</text>';
+    for(var r3=1;r3<=R;r3++)inner+='<text x="16" y="'+(Y0-r3*RH+8)+'" font-size="13" font-weight="700" fill="'+((r3%2)?kD:kO)+'">'+r3+'</text>';
+    return c_wrap(W,H,inner);}
+  function gridChart(isPA){var X0=42,Y0=(isPA?196:150),SW=isPA?30:24,RH=isPA?44:30,R=4,C=8,W=X0+C*SW+34,H=(isPA?236:190),inner='';
+    for(var c=0;c<=C;c++)inner+=c_ov(X0+c*SW,Y0+8,0,kD);
+    for(var r=1;r<=R;r++){var col=(r%2)?kD:kO,y=Y0-(r-1)*RH;
+      if(isPA){inner+=c_ov(X0-9,y-14,72,col)+c_ov(X0-12,y-30,72,col);}else{inner+=c_ov(X0-8,y-8,72,col);}
+      for(var c2=1;c2<=C;c2++)inner+= isPA? c_pa(X0+c2*SW,y+8,34,col) : c_x(X0+c2*SW,y,col);
+      inner+='<text x="'+(X0+C*SW+16)+'" y="'+(y+(isPA?-6:4))+'" font-size="13" font-weight="700" fill="'+col+'">'+r+'</text>';}
+    return c_wrap(W,H,inner);}
+  function roundChart(startSts,isPA){var cx=200,cy=158,W=400,H=310,inner='';
+    inner+='<circle cx="'+cx+'" cy="'+cy+'" r="11" fill="none" stroke="'+kD+'" stroke-width="2"/>';
+    var rings=[[startSts,16,46],[startSts*2,48,84],[startSts*3,86,122]];
+    rings.forEach(function(rg,ri){var N=rg[0],ri0=rg[1],ro=rg[2],col=(ri%2===0)?kD:kO;
+      for(var s=0;s<N;s++){var a=(s/N)*6.28318-1.5708;var x1=cx+ri0*Math.cos(a),y1=cy+ri0*Math.sin(a),x2=cx+ro*Math.cos(a),y2=cy+ro*Math.sin(a);
+        inner+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke="'+col+'" stroke-width="1.9" stroke-linecap="round"/>';
+        if(isPA){var f=ri0+(ro-ri0)*0.42,mx=cx+f*Math.cos(a),my=cy+f*Math.sin(a),pp=a+1.5708;inner+='<line x1="'+(mx-5*Math.cos(pp)).toFixed(1)+'" y1="'+(my-5*Math.sin(pp)).toFixed(1)+'" x2="'+(mx+5*Math.cos(pp)).toFixed(1)+'" y2="'+(my+5*Math.sin(pp)).toFixed(1)+'" stroke="'+col+'" stroke-width="1.6"/>';}}});
+    var ly=20;rings.forEach(function(rg,ri){inner+='<circle cx="18" cy="'+(ly-4)+'" r="5" fill="'+((ri%2===0)?kD:kO)+'"/><text x="30" y="'+ly+'" font-size="12" fill="#2b2620">V'+(ri+1)+': '+rg[0]+' '+(isPA?'pa':'pb')+'</text>';ly+=20;});
+    inner+='<text x="'+cx+'" y="'+(cy+150)+'" text-anchor="middle" font-size="11.5" fill="#7c4f24">se teje en redondo desde el centro (anillo mágico)</text>';
+    return c_wrap(W,H,inner);}
+  function miniSym(fn){return '<svg width="30" height="26" viewBox="0 0 30 26">'+fn(15,13)+'</svg>';}
+  function legendHTML(items){var h='<div class="legend">';items.forEach(function(it){h+='<span class="lg"><span class="lgs">'+it.s+'</span>'+esc(it.t)+'</span>';});return h+'</div>';}
+  function legRed(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad (cadeneta)"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"},{s:miniSym(function(x,y){return c_arc(x-11,y+3,x+11,y+3,9,kD,5);}),t:"arco = 5 cad"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (punto raso)"}]);}
+  function legPA(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_pa(x,y+11,22,kD);}),t:"pa (punto alto)"},{s:miniSym(function(x,y){return c_dot(x,y,kD);}),t:"pr (raso)"}]);}
+  function legPB(){return legendHTML([{s:miniSym(function(x,y){return c_ov(x,y,0,kD);}),t:"cad"},{s:miniSym(function(x,y){return c_x(x,y,kD);}),t:"pb (punto bajo)"}]);}
 
   // ---------- previews SVG ----------
   function meshDefs(id,body){return '<defs><pattern id="'+id+'" width="15" height="15" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="15" height="15" fill="'+body+'"/><path d="M0 0H15M0 0V15" stroke="rgba(255,255,255,.28)" stroke-width="1.3"/></pattern></defs>';}
