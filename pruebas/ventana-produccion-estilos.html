@@ -1,0 +1,1003 @@
+<title>La ventana de producción</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+/* ─────────────────────────────────────────────────────────────
+   TOKENS
+   Ground + ink follow the ZO palette (Ritual White / Carbon Black /
+   Silver Grey). Series colours are validated per style — see the
+   note block at the foot of the sheet.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #FFFFFA;
+  --surface:       #F4F4EF;
+  --surface-2:     #EBEBE5;
+  --tile:          #F1F1EB;
+  --ink:           #151515;
+  --ink-2:         #43464A;
+  --ink-3:         #6E7379;
+  --ink-4:         #9A9EA3;
+  --hairline:      #D9D9D2;
+  --hairline-soft: #E7E7E0;
+  --focus:         #23409A;
+
+  /* Serie · paleta solicitada (mosaico · data blocks) */
+  --s1-a: #23409A;  --s1-b: #6E86C9;
+  --s2-a: #5A6068;  --s2-b: #9BA1A9;
+  --s3-a: #A8791F;  --s3-b: #C9A75C;
+
+  /* Serie · cronograma (cobalto · plata · naranja) */
+  --t1-a: #1B4FD8;  --t1-b: #6E90E8;
+  --t2-a: #7A828C;  --t2-b: #A9AFB7;
+  --t3-a: #D2601C;  --t3-b: #E28F5B;
+
+  /* Serie · ZO (azul + neutros, sin hues extra) */
+  --z1-a: #002C8E;  --z1-b: #5C77BE;
+  --z2-a: #5A6068;  --z2-b: #9BA1A9;
+  --z3-a: #AEB4BC;  --z3-b: #CBD0D6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:            #121211;
+    --surface:       #1A1A19;
+    --surface-2:     #232322;
+    --tile:          #1E1E1D;
+    --ink:           #F2F2EC;
+    --ink-2:         #C6C6C0;
+    --ink-3:         #8E9297;
+    --ink-4:         #6A6E73;
+    --hairline:      #33332F;
+    --hairline-soft: #262624;
+    --focus:         #8AA8F5;
+
+    --s1-a: #8AA8F5;  --s1-b: #4C68B0;
+    --s2-a: #6F767F;  --s2-b: #4C525A;
+    --s3-a: #D6A03A;  --s3-b: #927029;
+
+    --t1-a: #7FA0F0;  --t1-b: #4A66AE;
+    --t2-a: #737A83;  --t2-b: #4E545B;
+    --t3-a: #E08F42;  --t3-b: #99632F;
+
+    --z1-a: #6E93F5;  --z1-b: #43589B;
+    --z2-a: #8B929B;  --z2-b: #5B6169;
+    --z3-a: #C3C9D1;  --z3-b: #858B92;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:            #121211;
+  --surface:       #1A1A19;
+  --surface-2:     #232322;
+  --ink:           #F2F2EC;
+  --ink-2:         #C6C6C0;
+  --ink-3:         #8E9297;
+  --ink-4:         #6A6E73;
+  --hairline:      #33332F;
+  --hairline-soft: #262624;
+  --focus:         #8AA8F5;
+
+  --s1-a: #8AA8F5;  --s1-b: #4C68B0;
+  --s2-a: #6F767F;  --s2-b: #4C525A;
+  --s3-a: #D6A03A;  --s3-b: #927029;
+
+  --t1-a: #7FA0F0;  --t1-b: #4A66AE;
+  --t2-a: #737A83;  --t2-b: #4E545B;
+  --t3-a: #E08F42;  --t3-b: #99632F;
+
+  --z1-a: #6E93F5;  --z1-b: #43589B;
+  --z2-a: #8B929B;  --z2-b: #5B6169;
+  --z3-a: #C3C9D1;  --z3-b: #858B92;
+}
+
+/* Resolución de la serie activa según paleta + estilo.
+   Vive en <body> para que cabecera, leyenda y hoja lean los mismos tokens. */
+body                          { --c1-a: var(--s1-a); --c1-b: var(--s1-b);
+                                --c2-a: var(--s2-a); --c2-b: var(--s2-b);
+                                --c3-a: var(--s3-a); --c3-b: var(--s3-b); }
+body[data-style="cronograma"] { --c1-a: var(--t1-a); --c1-b: var(--t1-b);
+                                --c2-a: var(--t2-a); --c2-b: var(--t2-b);
+                                --c3-a: var(--t3-a); --c3-b: var(--t3-b); }
+body[data-palette="zo"]       { --c1-a: var(--z1-a); --c1-b: var(--z1-b);
+                                --c2-a: var(--z2-a); --c2-b: var(--z2-b);
+                                --c3-a: var(--z3-a); --c3-b: var(--z3-b); }
+
+/* ─────────────────────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.page {
+  padding: 40px 40px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Cabecera ─────────────────────────────────────────────── */
+.masthead { display: flex; flex-direction: column; gap: 10px; }
+
+.eyebrow { color: var(--ink-4); }
+
+.masthead h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 300;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.deck {
+  margin: 0;
+  max-width: 92ch;
+  color: var(--ink-3);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+/* ── Fila de controles (una sola, encima de todo) ─────────── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 28px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.control { display: flex; flex-direction: column; gap: 8px; }
+.control > .mono { color: var(--ink-4); }
+
+.segmented { display: flex; gap: 0; }
+
+.segmented button {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  border-right-width: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font: inherit;
+  font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+.segmented button:last-child  { border-right-width: 1px; }
+.segmented button:hover       { color: var(--ink); background: var(--surface); }
+.segmented button[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.segmented button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; z-index: 1; }
+
+/* ── Titular 65 / 25 / 10, un render por estilo ───────────── */
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.headline-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.figure { display: flex; align-items: baseline; gap: 10px; }
+.figure .pct {
+  font-size: 34px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.figure .pct span { font-size: 20px; margin-left: 3px; }
+.figure .who { color: var(--ink-3); font-size: 13px; }
+.figure[data-src="local"]   .pct { color: var(--c1-a); }
+.figure[data-src="archivo"] .pct { color: var(--c2-a); }
+.figure[data-src="ugc"]     .pct { color: var(--c3-a); }
+
+.headline-viz { min-height: 22px; }
+
+/* Estilo 01 — mosaico maestro: 100 teselas, 65 / 25 / 10 */
+.master-mosaic {
+  display: grid;
+  grid-template-columns: repeat(25, 1fr);
+  gap: 2px;
+  max-width: 560px;
+}
+.master-mosaic i { display: block; aspect-ratio: 1; border-radius: 0; }
+.master-mosaic i[data-src="local"]   { background: var(--c1-a); }
+.master-mosaic i[data-src="archivo"] { background: var(--c2-a); }
+.master-mosaic i[data-src="ugc"]     { background: var(--c3-a); }
+
+/* Estilo 02 — línea maestra: 3 tramos + marcador cuadrado */
+.master-line { display: flex; align-items: center; max-width: 720px; height: 18px; }
+.master-line i { display: block; height: 10px; position: relative; }
+.master-line i::after {
+  content: "";
+  position: absolute;
+  right: 0; top: -3px;
+  width: 4px; height: 16px;
+  background: currentColor;
+}
+.master-line i[data-src="local"]   { flex: 65; background: var(--c1-a); color: var(--c1-a); }
+.master-line i[data-src="archivo"] { flex: 25; background: var(--c2-a); color: var(--c2-a); }
+.master-line i[data-src="ugc"]     { flex: 10; background: var(--c3-a); color: var(--c3-a); }
+
+/* Estilo 03 — bloques maestros: 3 sólidos, gap 3px */
+.master-blocks { display: flex; gap: 3px; max-width: 720px; }
+.master-blocks i { display: block; height: 22px; border-radius: 0; }
+.master-blocks i[data-src="local"]   { flex: 65; background: var(--c1-a); }
+.master-blocks i[data-src="archivo"] { flex: 25; background: var(--c2-a); }
+.master-blocks i[data-src="ugc"]     { flex: 10; background: var(--c3-a); }
+
+/* ── Leyenda ──────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  align-items: center;
+  color: var(--ink-3);
+}
+.legend .item { display: flex; align-items: center; gap: 8px; }
+.legend .sw { width: 12px; height: 12px; border-radius: 0; flex: none; }
+.legend .sw[data-src="local"]   { background: var(--c1-a); }
+.legend .sw[data-src="archivo"] { background: var(--c2-a); }
+.legend .sw[data-src="ugc"]     { background: var(--c3-a); }
+.legend .sw[data-tone="b"][data-src="local"]   { background: var(--c1-b); }
+.legend .sw[data-tone="o"] { background: transparent; border: 2px solid var(--c3-a); }
+
+/* ─────────────────────────────────────────────────────────────
+   LA REJILLA
+   ───────────────────────────────────────────────────────────── */
+.scroller { overflow-x: auto; padding-bottom: 4px; }
+
+.sheet {
+  min-width: 1320px;
+  --col-idx:   30px;
+  --col-name:  212px;
+  --col-note:  400px;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: var(--col-idx) var(--col-name) repeat(12, minmax(44px, 1fr)) var(--col-note);
+}
+
+/* Cabecera de columnas: etiquetas escalonadas con tick, como el original */
+.col-heads { align-items: end; height: 118px; }
+.col-heads .head {
+  position: relative;
+  height: 100%;
+  padding-left: 6px;
+  display: flex;
+  align-items: flex-start;
+}
+.col-heads .head > span {
+  display: block;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.group-rule { border-left: 1px solid var(--ink-4); }
+
+/* Fila de sistema */
+.system-row {
+  border-top: 1px solid var(--ink);
+  margin-top: 22px;
+}
+.system-row .system-idx  { color: var(--ink-4); padding-top: 12px; }
+.system-row .system-name {
+  grid-column: 2 / 3;
+  padding: 10px 0 8px;
+  font-size: 19px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+.system-row .system-role {
+  grid-column: 15 / 16;
+  align-self: center;
+  text-align: right;
+  color: var(--ink-4);
+  padding-left: 18px;
+}
+.system-row .system-span { grid-column: 3 / 15; }
+
+/* Fila de pieza */
+.piece-row {
+  border-top: 1px solid var(--hairline-soft);
+  min-height: 46px;
+  align-items: stretch;
+  transition: background-color 140ms ease;
+}
+.piece-row:hover { background: var(--surface); }
+
+.piece-idx {
+  color: var(--ink-4);
+  display: flex;
+  align-items: center;
+  padding-top: 1px;
+}
+.piece-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 16px;
+  font-size: 14.5px;
+  letter-spacing: -0.005em;
+}
+.piece-name::before {
+  content: "";
+  width: 3px;
+  align-self: stretch;
+  margin: 8px 0;
+  background: var(--c1-a);
+  flex: none;
+  opacity: 0;
+}
+.piece-row[data-lead="1"] .piece-name::before { opacity: 1; }
+
+.piece-note {
+  padding: 9px 0 9px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: center;
+}
+.piece-note .claim { font-size: 13px; color: var(--ink); letter-spacing: -0.003em; }
+.piece-note .specs { color: var(--ink-3); }
+
+/* Etiquetas tipo tag — sólo en estilo 03 */
+.tagset { display: none; flex-wrap: wrap; gap: 3px; align-content: center; padding: 9px 0 9px 20px; }
+.tagset span {
+  border: 1px solid var(--hairline);
+  color: var(--ink-3);
+  padding: 3px 7px 2px;
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+/* ── Celdas ───────────────────────────────────────────────── */
+.cell { position: relative; }
+
+.mark {
+  position: absolute;
+  inset: 9px 2px;
+  border-radius: 0;
+  background: var(--c1-a);
+}
+.cell[data-src="archivo"] .mark { background: var(--c2-a); }
+.cell[data-src="ugc"]     .mark { background: var(--c3-a); }
+.cell[data-tone="b"] .mark                   { background: var(--c1-b); }
+.cell[data-tone="b"][data-src="archivo"] .mark { background: var(--c2-b); }
+.cell[data-tone="b"][data-src="ugc"]     .mark { background: var(--c3-b); }
+/* Contorno = fuente de usuario: forma como codificación secundaria */
+.cell[data-tone="o"] .mark {
+  background: transparent;
+  border: 2px solid var(--c3-a);
+}
+.cell[data-tone="o"][data-src="local"]   .mark { border-color: var(--c1-a); }
+.cell[data-tone="o"][data-src="archivo"] .mark { border-color: var(--c2-a); }
+
+.cell:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* ═══ ESTILO 01 · MOSAICO ═════════════════════════════════ */
+.sheet[data-style="mosaico"] .cell {
+  border-right: 1px solid var(--hairline-soft);
+}
+/* Tablero: la paridad viene del índice de fila y de columna, no de la posición
+   en el DOM, así el damero no se desfasa al cambiar de sistema. */
+.sheet[data-style="mosaico"] .piece-row[data-parity="0"] .cell[data-col-parity="0"],
+.sheet[data-style="mosaico"] .piece-row[data-parity="1"] .cell[data-col-parity="1"] {
+  background: var(--tile);
+}
+.sheet[data-style="mosaico"] .mark { inset: 8px 2px; }
+
+/* ═══ ESTILO 02 · CRONOGRAMA ══════════════════════════════ */
+.sheet[data-style="cronograma"] .cell { border-right: 0; }
+.sheet[data-style="cronograma"] .mark {
+  inset: auto 0 auto 0;
+  top: 50%;
+  height: 10px;
+  transform: translateY(-50%);
+}
+/* extremos cuadrados: marcador al cierre de cada tramo */
+.sheet[data-style="cronograma"] .cell[data-seg-end="1"] .mark::after {
+  content: "";
+  position: absolute;
+  right: 0; top: -3px;
+  width: 4px; height: 16px;
+  background: inherit;
+}
+.sheet[data-style="cronograma"] .cell[data-tone="o"] .mark::after { background: var(--c3-a); }
+/* El tramo conecta la primera y la última columna de cada fuente; sólo engorda
+   donde la pieza usa esa columna de verdad, así el trazo no inventa uso. */
+.sheet[data-style="cronograma"] .cell[data-seg-fill="1"]:not([data-hit="1"]) .mark {
+  height: 2px;
+  border: 0;
+}
+.sheet[data-style="cronograma"] .cell[data-seg-fill="1"]:not([data-hit="1"]) .mark::after { display: none; }
+
+/* ═══ ESTILO 03 · DATA BLOCKS ═════════════════════════════ */
+.sheet[data-style="blocks"] .mark { inset: 7px 1.5px; }
+.sheet[data-style="blocks"] .piece-note { display: none; }
+.sheet[data-style="blocks"] .tagset     { display: flex; }
+.sheet[data-style="blocks"] .cell       { border-right: 0; }
+
+/* ── Tooltip ──────────────────────────────────────────────── */
+.tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 120ms ease, transform 120ms ease;
+  background: var(--bg);
+  border: 1px solid var(--ink);
+  padding: 9px 11px;
+  max-width: 280px;
+  border-radius: 0;
+}
+.tip[data-open="1"] { opacity: 1; transform: translateY(0); }
+.tip .t-src   { display: flex; align-items: center; gap: 7px; color: var(--ink-3); }
+.tip .t-sw    { width: 9px; height: 9px; }
+.tip .t-piece { font-size: 13px; margin-top: 5px; }
+.tip .t-col   { color: var(--ink-3); font-size: 12px; }
+
+/* ── Vista de tabla ───────────────────────────────────────── */
+.tableview { display: none; }
+.tableview[data-open="1"] { display: block; }
+.tableview table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.tableview caption { text-align: left; color: var(--ink-3); padding-bottom: 12px; }
+.tableview th, .tableview td {
+  text-align: left;
+  padding: 8px 14px 8px 0;
+  border-bottom: 1px solid var(--hairline-soft);
+  vertical-align: top;
+}
+.tableview thead th {
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink-3);
+  font-weight: 400;
+  font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+.tableview td.num { font-variant-numeric: tabular-nums; color: var(--ink-4); }
+
+/* ── Notas al pie ─────────────────────────────────────────── */
+.colophon {
+  border-top: 1px solid var(--hairline);
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px 40px;
+  color: var(--ink-3);
+}
+.colophon h2 { margin: 0 0 7px; color: var(--ink-4); }
+.colophon p  { margin: 0 0 7px; font-size: 12.5px; line-height: 1.55; }
+.colophon code {
+  font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="mono eyebrow">Prototipo · prueba de estilo de barras · no afecta al proyecto original</div>
+    <h1>La ventana de producción</h1>
+    <p class="deck mono">De qué está hecha cada pieza · once piezas, cuatro sistemas, tres fuentes</p>
+  </header>
+
+  <div class="controls">
+    <div class="control">
+      <div class="mono">Estilo de marca</div>
+      <div class="segmented" role="group" aria-label="Estilo de marca">
+        <button type="button" data-set-style="mosaico"    aria-pressed="true">01 Mosaico</button>
+        <button type="button" data-set-style="cronograma" aria-pressed="false">02 Cronograma</button>
+        <button type="button" data-set-style="blocks"     aria-pressed="false">03 Data blocks</button>
+      </div>
+    </div>
+    <div class="control">
+      <div class="mono">Paleta</div>
+      <div class="segmented" role="group" aria-label="Paleta">
+        <button type="button" data-set-palette="brief" aria-pressed="true">Solicitada</button>
+        <button type="button" data-set-palette="zo"    aria-pressed="false">ZO · azul + neutros</button>
+      </div>
+    </div>
+    <div class="control">
+      <div class="mono">Datos</div>
+      <div class="segmented" role="group" aria-label="Vista de datos">
+        <button type="button" id="toggle-table" aria-pressed="false">Ver tabla</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="headline" aria-label="Reparto por fuente">
+    <div class="headline-figures" id="figures"></div>
+    <div class="headline-viz" id="headline-viz"></div>
+  </section>
+
+  <div class="legend mono" id="legend"></div>
+
+  <div class="scroller">
+    <div class="sheet" id="sheet" data-style="mosaico" data-palette="brief"></div>
+  </div>
+
+  <section class="tableview" id="tableview" aria-label="Vista de tabla"></section>
+
+  <footer class="colophon">
+    <div>
+      <h2 class="mono">Qué se ha cambiado</h2>
+      <p>Sólo la marca gráfica: teselas, líneas o bloques, siempre con esquina dura (<code>border-radius: 0</code>). Los datos, los textos y la estructura de once piezas × cuatro sistemas × doce columnas se mantienen tal cual.</p>
+    </div>
+    <div>
+      <h2 class="mono">Paleta y contraste</h2>
+      <p>Mosaico y data blocks: <code>#23409A</code> · <code>#5A6068</code> · <code>#A8791F</code>. Cronograma: <code>#1B4FD8</code> · <code>#7A828C</code> · <code>#D2601C</code>. Separación entre pares adyacentes ΔE ≥ 13 con deuteranopia y protanopia, y ≥ 15 con visión normal; contraste sobre el fondo ≥ 3:1.</p>
+      <p>El gris es intencionadamente acromático, así que no llega al mínimo de croma de un color de serie. Lo compensan el contorno de la fuente de usuario, la leyenda y la vista de tabla.</p>
+    </div>
+    <div>
+      <h2 class="mono">Tipografía</h2>
+      <p>ZO Skin Sans y Geist Mono no viajan con este archivo, así que la página usa una neogrotesca de sistema para la estructura y una monoespaciada para los metadatos en mayúscula. Sustituye ambas pilas por las fuentes de marca al llevarlo a producción.</p>
+    </div>
+  </footer>
+
+</div>
+
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+
+<script>
+/* ─── Datos ──────────────────────────────────────────────── */
+
+const SOURCES = [
+  { id: "local",   pct: 65, label: "Producción local" },
+  { id: "archivo", pct: 25, label: "Archivo internacional" },
+  { id: "ugc",     pct: 10, label: "Generado por usuarios" }
+];
+
+const COLS = [
+  { id: "L1", src: "local",   label: "Film + movimiento" },
+  { id: "L2", src: "local",   label: "Entrevistas" },
+  { id: "L3", src: "local",   label: "Editorial + stills" },
+  { id: "L4", src: "local",   label: "Casos + evolución" },
+  { id: "L5", src: "local",   label: "Citas + audio" },
+  { id: "A1", src: "archivo", label: "Producto + packshots" },
+  { id: "A2", src: "archivo", label: "Beauty + modelo" },
+  { id: "A3", src: "archivo", label: "Ciencia + método" },
+  { id: "A4", src: "archivo", label: "Archivo Dr. Obagi" },
+  { id: "A5", src: "archivo", label: "Campaña global" },
+  { id: "U1", src: "ugc",     label: "Doctoras" },
+  { id: "U2", src: "ugc",     label: "Pacientes" }
+];
+
+const SYSTEMS = [
+  { n: "01", name: "Film y movimiento",   role: "emociona y hace reconocible el mundo" },
+  { n: "02", name: "Ciencia y protocolo", role: "da razón para creer" },
+  { n: "03", name: "Editorial y marca",   role: "construye autoridad" },
+  { n: "04", name: "Social y personas",   role: "sostiene los seis meses" }
+];
+
+/* cells: { col, tone }  ·  tone a = uso principal, b = uso secundario, o = contorno */
+const PIECES = [
+  { sys: "01", n: "01", lead: true, name: "Hero movie master",
+    claim: "Un día de consulta y el gesto que lo prueba.",
+    specs: "máster 16:9 · máster 9:16 re-editado · cutdowns 60/30/15 · subtítulos ES-EN",
+    tags: ["16:9", "9:16", "60/30/15", "ES-EN"],
+    cells: [{ col: "L1", tone: "a" }] },
+
+  { sys: "01", n: "02", lead: true, name: "Mini movies ×4",
+    claim: "La jornada entera de cada doctora.",
+    specs: "4 piezas de 2-3' · vertical nativo · cortes de 45\" · banco de citas",
+    tags: ["×4", "2-3'", "9:16", "45\""],
+    cells: [{ col: "L1", tone: "a" }, { col: "L2", tone: "a" }] },
+
+  { sys: "01", n: "03", name: "Spot digital",
+    claim: "La respuesta: las tres referencias y el 0.3.",
+    specs: "30\" / 20\" / 15\" / 6\" · 16:9 · 9:16 · 1:1 · display estático · derivado",
+    tags: ["30/20/15/6\"", "16:9", "9:16", "1:1", "display"],
+    cells: [{ col: "L1", tone: "a" }, { col: "A1", tone: "a" }, { col: "A2", tone: "a" }, { col: "A5", tone: "b" }] },
+
+  { sys: "01", n: "04", lead: true, name: "Making-of",
+    claim: "La prueba de que el día era real.",
+    specs: "pieza de 90\" · 4 fragmentos verticales de 15\" · fotografía de rodaje",
+    tags: ["90\"", "×4 · 15\"", "stills"],
+    cells: [{ col: "L1", tone: "a" }, { col: "L5", tone: "b" }] },
+
+  { sys: "02", n: "05", lead: true, name: "Cápsulas de protocolo ×4",
+    claim: "Cómo se usa. Una idea por cápsula.",
+    specs: "4 cápsulas de 60-90\" · vertical nativo · extractos de 20\" · subtitulado",
+    tags: ["×4", "60-90\"", "9:16", "20\""],
+    cells: [{ col: "L2", tone: "a" }, { col: "A3", tone: "a" }, { col: "U1", tone: "o" }] },
+
+  { sys: "02", n: "06", name: "Ciencia + protocolo",
+    claim: "El porqué: mecanismo, tolerancia, criterio.",
+    specs: "dossier PDF · esquemas de mecanismo · serie consentida · one-pager ProPortal",
+    tags: ["PDF", "esquemas", "serie", "1-pager"],
+    cells: [{ col: "L4", tone: "b" }, { col: "A3", tone: "a" }] },
+
+  { sys: "03", n: "07", lead: true, name: "Key visual + campaña",
+    claim: "El sistema gráfico de los seis meses.",
+    specs: "KV máster · díptico y políptico · adaptaciones display, prensa y clínica",
+    tags: ["KV", "díptico", "políptico", "display"],
+    cells: [{ col: "L3", tone: "a" }, { col: "A1", tone: "a" }, { col: "A5", tone: "b" }] },
+
+  { sys: "03", n: "08", lead: true, name: "Sistema editorial + PR",
+    claim: "La conversación con la prensa.",
+    specs: "press kit · nota de prensa · 2 perfiles · feature financiado · banco de imagen",
+    tags: ["press kit", "nota", "2 perfiles", "feature"],
+    cells: [{ col: "L2", tone: "a" }, { col: "L3", tone: "a" }, { col: "A4", tone: "a" }, { col: "A5", tone: "b" }] },
+
+  { sys: "03", n: "09", name: "Firmas personales ×4",
+    claim: "La pieza propia de cada doctora.",
+    specs: "Marta EL ORIGEN · Lidia FEATURE · Ofelia LA ENTREVISTA · Paz FOTORREPORTAJE",
+    tags: ["×4", "origen", "feature", "entrevista", "fotorreportaje"],
+    cells: [{ col: "L2", tone: "a" }, { col: "A4", tone: "a" }, { col: "U1", tone: "o" }] },
+
+  { sys: "04", n: "10", lead: true, name: "Sistema social",
+    claim: "La cadencia entre hitos. Conversar, no emitir.",
+    specs: "reels · carruseles · stories de preguntas · citas · cortes para paid",
+    tags: ["reels", "carruseles", "stories", "paid"],
+    cells: [{ col: "L1", tone: "a" }, { col: "L5", tone: "b" }, { col: "A1", tone: "a" },
+            { col: "U1", tone: "o" }, { col: "U2", tone: "o" }] },
+
+  { sys: "04", n: "11", name: "Contenido de paciente",
+    claim: "Los pacientes del film, en W4 y W12.",
+    specs: "diario en vídeo · testimonio de 60\" · serie fotográfica W1-W12",
+    tags: ["diario", "60\"", "W1-W12"],
+    cells: [{ col: "L4", tone: "b" }, { col: "U2", tone: "o" }] }
+];
+
+/* ─── Utilidades ─────────────────────────────────────────── */
+
+const $  = (s, r = document) => r.querySelector(s);
+const el = (tag, cls, txt) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (txt !== undefined) n.textContent = txt;
+  return n;
+};
+const srcLabel = id => SOURCES.find(s => s.id === id).label;
+const colIndex = id => COLS.findIndex(c => c.id === id);
+const groupStart = id => id === "L1" || id === "A1" || id === "U1";
+
+/* ─── Cabecera: cifras + render del 65/25/10 por estilo ──── */
+
+function renderFigures() {
+  const host = $("#figures");
+  host.textContent = "";
+  SOURCES.forEach(s => {
+    const f = el("div", "figure");
+    f.dataset.src = s.id;
+    const pct = el("div", "pct");
+    pct.append(document.createTextNode(String(s.pct)), el("span", null, "%"));
+    f.append(pct, el("div", "who", s.label));
+    host.append(f);
+  });
+}
+
+function renderHeadlineViz(style) {
+  const host = $("#headline-viz");
+  host.textContent = "";
+
+  if (style === "mosaico") {
+    // 100 teselas repartidas 65 / 25 / 10 — el reparto se lee contando cuadrados
+    const box = el("div", "master-mosaic");
+    box.setAttribute("aria-hidden", "true");
+    SOURCES.forEach(s => {
+      for (let i = 0; i < s.pct; i++) {
+        const t = el("i");
+        t.dataset.src = s.id;
+        box.append(t);
+      }
+    });
+    host.append(box);
+    return;
+  }
+
+  if (style === "cronograma") {
+    const box = el("div", "master-line");
+    box.setAttribute("aria-hidden", "true");
+    SOURCES.forEach(s => { const t = el("i"); t.dataset.src = s.id; box.append(t); });
+    host.append(box);
+    return;
+  }
+
+  const box = el("div", "master-blocks");
+  box.setAttribute("aria-hidden", "true");
+  SOURCES.forEach(s => { const t = el("i"); t.dataset.src = s.id; box.append(t); });
+  host.append(box);
+}
+
+/* ─── Leyenda ────────────────────────────────────────────── */
+
+function renderLegend() {
+  const host = $("#legend");
+  host.textContent = "";
+  SOURCES.forEach(s => {
+    const i = el("div", "item");
+    const sw = el("span", "sw");
+    sw.dataset.src = s.id;
+    i.append(sw, el("span", null, `${s.label} · ${s.pct} %`));
+    host.append(i);
+  });
+
+  const tone = el("div", "item");
+  const swB = el("span", "sw");
+  swB.dataset.src = "local"; swB.dataset.tone = "b";
+  tone.append(swB, el("span", null, "Tono claro · uso secundario"));
+
+  const out = el("div", "item");
+  const swO = el("span", "sw");
+  swO.dataset.tone = "o";
+  out.append(swO, el("span", null, "Contorno · aportado por la persona"));
+
+  host.append(tone, out);
+}
+
+/* ─── La rejilla ─────────────────────────────────────────── */
+
+function renderSheet() {
+  const sheet = $("#sheet");
+  sheet.textContent = "";
+
+  /* Cabecera de columnas, escalonada y reiniciada por grupo */
+  const heads = el("div", "grid-row col-heads");
+  heads.append(el("div"), el("div"));
+  let step = 0;
+  COLS.forEach(c => {
+    const isFirst = groupStart(c.id);
+    if (isFirst) step = 0;
+    const h = el("div", "head");
+    if (isFirst) h.classList.add("group-rule");
+    const label = el("span", "mono", c.label);
+    label.style.marginTop = `${step * 19}px`;
+    h.append(label);
+    if (!isFirst) {
+      // tick que baja desde la etiqueta hasta la rejilla
+      const tick = el("span");
+      tick.style.cssText =
+        `position:absolute;left:0;top:${step * 19}px;bottom:0;width:1px;background:var(--hairline);`;
+      h.append(tick);
+    }
+    heads.append(h);
+    step++;
+  });
+  heads.append(el("div"));
+  sheet.append(heads);
+
+  SYSTEMS.forEach(sys => {
+    const row = el("div", "grid-row system-row");
+    row.append(el("div", "system-idx mono", sys.n));
+    row.append(el("div", "system-name", sys.name));
+    const span = el("div", "system-span");
+    row.append(span);
+    row.append(el("div", "system-role mono", sys.role));
+    sheet.append(row);
+
+    PIECES.filter(p => p.sys === sys.n).forEach(p =>
+      sheet.append(pieceRow(p, PIECES.indexOf(p))));
+  });
+}
+
+function pieceRow(p, rowIndex) {
+  const row = el("div", "grid-row piece-row");
+  row.dataset.parity = String(rowIndex % 2);
+  if (p.lead) row.dataset.lead = "1";
+
+  row.append(el("div", "piece-idx mono", p.n));
+  row.append(el("div", "piece-name", p.name));
+
+  /* tramos por fuente, para el estilo cronograma */
+  const segs = {};
+  p.cells.forEach(c => {
+    const src = COLS[colIndex(c.col)].src;
+    const i = colIndex(c.col);
+    if (!segs[src]) segs[src] = { from: i, to: i };
+    segs[src].from = Math.min(segs[src].from, i);
+    segs[src].to   = Math.max(segs[src].to, i);
+  });
+
+  COLS.forEach((c, i) => {
+    const cell = el("div", "cell");
+    cell.dataset.colParity = String(i % 2);
+    if (groupStart(c.id)) cell.classList.add("group-rule");
+
+    const hit = p.cells.find(x => x.col === c.id);
+    const seg = segs[c.src];
+    const inSeg = seg && i >= seg.from && i <= seg.to;
+
+    if (hit || inSeg) {
+      cell.dataset.src = c.src;
+      cell.dataset.tone = hit ? hit.tone : (p.cells.find(x => COLS[colIndex(x.col)].src === c.src) || {}).tone || "a";
+      if (inSeg) cell.dataset.segFill = "1";
+      if (seg && i === seg.to) cell.dataset.segEnd = "1";
+      if (hit) cell.dataset.hit = "1";
+
+      const mark = el("div", "mark");
+      cell.append(mark);
+
+      /* Sólo las columnas realmente usadas son foco y llevan tooltip;
+         los tramos de conexión del cronograma no afirman uso. */
+      if (hit) {
+        cell.tabIndex = 0;
+        cell.setAttribute("role", "img");
+        cell.setAttribute("aria-label", `${p.name} · ${srcLabel(c.src)} · ${c.label}`);
+        cell.dataset.tipPiece = p.name;
+        cell.dataset.tipCol = c.label;
+        cell.dataset.tipSrc = srcLabel(c.src);
+      }
+    }
+    row.append(cell);
+  });
+
+  const note = el("div", "piece-note");
+  note.append(el("div", "claim", p.claim));
+  note.append(el("div", "specs mono", p.specs));
+  row.append(note);
+
+  const tags = el("div", "tagset mono");
+  p.tags.forEach(t => tags.append(el("span", null, t)));
+  row.append(tags);
+
+  return row;
+}
+
+/* En cronograma sólo pintamos los tramos; fuera de él, los huecos se ocultan */
+function applySegVisibility(style) {
+  document.querySelectorAll("#sheet .cell").forEach(cell => {
+    const mark = cell.querySelector(".mark");
+    if (!mark) return;
+    const isHit = cell.dataset.hit === "1";
+    mark.style.display = (style === "cronograma" || isHit) ? "" : "none";
+  });
+}
+
+/* ─── Tooltip ────────────────────────────────────────────── */
+
+const tip = $("#tip");
+
+function showTip(cell, x, y) {
+  tip.textContent = "";
+  const head = el("div", "t-src mono");
+  const sw = el("span", "t-sw");
+  const srcId = cell.dataset.src;
+  sw.style.background =
+    srcId === "local" ? "var(--c1-a)" : srcId === "archivo" ? "var(--c2-a)" : "var(--c3-a)";
+  head.append(sw, el("span", null, cell.dataset.tipSrc));
+  tip.append(head);
+  tip.append(el("div", "t-piece", cell.dataset.tipPiece));
+  tip.append(el("div", "t-col", cell.dataset.tipCol));
+  tip.dataset.open = "1";
+  tip.setAttribute("aria-hidden", "false");
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 14, window.innerWidth - r.width - 12) + "px";
+  tip.style.top  = Math.min(y + 14, window.innerHeight - r.height - 12) + "px";
+}
+
+function hideTip() {
+  tip.dataset.open = "0";
+  tip.setAttribute("aria-hidden", "true");
+}
+
+function wireTips() {
+  const sheet = $("#sheet");
+  sheet.addEventListener("mousemove", e => {
+    const cell = e.target.closest(".cell[data-tip-piece]");
+    if (cell) showTip(cell, e.clientX, e.clientY); else hideTip();
+  });
+  sheet.addEventListener("mouseleave", hideTip);
+  sheet.addEventListener("focusin", e => {
+    const cell = e.target.closest(".cell[data-tip-piece]");
+    if (!cell) return;
+    const r = cell.getBoundingClientRect();
+    showTip(cell, r.left, r.bottom);
+  });
+  sheet.addEventListener("focusout", hideTip);
+}
+
+/* ─── Vista de tabla ─────────────────────────────────────── */
+
+function renderTable() {
+  const host = $("#tableview");
+  host.textContent = "";
+  const t = el("table");
+  const cap = el("caption", "mono",
+    "Vista de tabla · el mismo dato sin depender del color");
+  t.append(cap);
+
+  const thead = el("thead");
+  const hr = el("tr");
+  ["#", "Pieza", "Sistema", "Fuentes", "Columnas", "Formato"].forEach(h => hr.append(el("th", null, h)));
+  thead.append(hr);
+  t.append(thead);
+
+  const tb = el("tbody");
+  PIECES.forEach(p => {
+    const tr = el("tr");
+    tr.append(el("td", "num", p.n));
+    tr.append(el("td", null, p.name));
+    tr.append(el("td", null, SYSTEMS.find(s => s.n === p.sys).name));
+    const srcs = [...new Set(p.cells.map(c => srcLabel(COLS[colIndex(c.col)].src)))];
+    tr.append(el("td", null, srcs.join(" · ")));
+    tr.append(el("td", null, p.cells.map(c => COLS[colIndex(c.col)].label).join(" · ")));
+    tr.append(el("td", null, p.specs));
+    tb.append(tr);
+  });
+  t.append(tb);
+  host.append(t);
+}
+
+/* ─── Controles ──────────────────────────────────────────── */
+
+function setStyle(style) {
+  document.body.dataset.style = style;   // resuelve los tokens de serie
+  $("#sheet").dataset.style = style;     // geometría de las marcas
+  document.querySelectorAll("[data-set-style]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.setStyle === style)));
+  renderHeadlineViz(style);
+  applySegVisibility(style);
+}
+
+function setPalette(pal) {
+  document.body.dataset.palette = pal;
+  document.querySelectorAll("[data-set-palette]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.setPalette === pal)));
+}
+
+function wireControls() {
+  document.querySelectorAll("[data-set-style]").forEach(b =>
+    b.addEventListener("click", () => setStyle(b.dataset.setStyle)));
+  document.querySelectorAll("[data-set-palette]").forEach(b =>
+    b.addEventListener("click", () => setPalette(b.dataset.setPalette)));
+
+  const tv = $("#toggle-table");
+  tv.addEventListener("click", () => {
+    const open = $("#tableview").dataset.open === "1";
+    $("#tableview").dataset.open = open ? "0" : "1";
+    tv.setAttribute("aria-pressed", String(!open));
+    tv.textContent = open ? "Ver tabla" : "Ocultar tabla";
+  });
+}
+
+/* ─── Arranque ───────────────────────────────────────────── */
+
+renderFigures();
+renderLegend();
+renderSheet();
+renderTable();
+wireTips();
+wireControls();
+setStyle("mosaico");
+setPalette("brief");
+</script>
