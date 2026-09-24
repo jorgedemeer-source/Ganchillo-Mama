@@ -22,12 +22,18 @@ También se puede cambiar desde la pestaña **04 Ajustes** del móvil (solo afec
 
 - `config.js` → reparto **provincia → territorio**: es una propuesta deducida de los nombres
   de los territorios. Validar con Ventas.
-- `config.js` → **nombre y email de cada delegado**: en blanco.
 - `config.js` → **texto RGPD y email de derechos**: revisar con Legal.
 - Logo: los iconos actuales son provisionales (cuadrado azul con "ZO"). Para poner el
   oficial, copiar desde Box (`ZO Brand Logos/PNG` y `/SVG`) a la carpeta `logo/`:
   `ZO_Icon_Black.png` y `ZO_Wordmark_wObagi_Left_Black.svg`. La cabecera los carga sola.
   Para el icono de la app, sustituir `icon-192.png`, `icon-512.png` e `icon-180.png`.
+
+## Código de barras del pase
+
+El pase del congreso lleva un código de barras con un identificador interno de la
+organización. La app puede escanearlo (Chrome en Android) o se teclea, y lo guarda
+en el campo *Código del pase*. Por sí solo no dice quién es la persona: sirve para
+cruzarlo si la organización entrega después su listado de asistentes escaneados.
 
 ## Ficheros
 

@@ -1,6 +1,6 @@
 /* ZO Leads · service worker. HTML y config: network-first (siempre la última
    versión si hay red, copia guardada si no). Iconos y manifest: cache-first. */
-var CACHE = 'zo-leads-v1';
+var CACHE = 'zo-leads-v2';
 var ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function (e) {

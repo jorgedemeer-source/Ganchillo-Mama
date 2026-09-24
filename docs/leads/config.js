@@ -5,7 +5,7 @@
 
    ATENCIÓN: el reparto provincia → territorio es una PROPUESTA deducida de los
    nombres de los territorios (no había tabla en Box). Hay que validarlo con
-   Ventas antes del congreso, igual que los nombres y correos de cada delegado. */
+   Ventas antes del congreso. Los delegados y sus correos sí están confirmados. */
 window.LEADS_CONFIG = {
   version: 1,
   evento: { nombre: "GEDET 2026", lugar: "", fechas: "" },
@@ -15,17 +15,17 @@ window.LEADS_CONFIG = {
 
   /* territorio → delegado responsable + provincias que enruta */
   territorios: [
-    { nombre: "Central Hub", delegado: "", email: "",
+    { nombre: "Central Hub", delegado: "Mar Zorrilla", email: "mzorrillaabad@zoskinhealth.com",
       provincias: ["Madrid","Toledo","Guadalajara","Cuenca","Ciudad Real","Albacete","Segovia","Ávila","Valladolid","Salamanca","Zamora","León","Palencia","Burgos","Soria","Cáceres","Badajoz"] },
-    { nombre: "North Mediterranean Cluster", delegado: "", email: "",
+    { nombre: "North Mediterranean Cluster", delegado: "Chus Marques", email: "cmarquesmedina@zoskinhealth.com",
       provincias: ["Barcelona","Girona","Lleida","Tarragona","Illes Balears"] },
-    { nombre: "East Corridor", delegado: "", email: "",
+    { nombre: "East Corridor", delegado: "Inés Justamante", email: "ijustamante@zoskinhealth.com",
       provincias: ["Valencia","Castellón","Alicante","Murcia","Zaragoza","Huesca","Teruel"] },
-    { nombre: "South Division", delegado: "", email: "",
+    { nombre: "South Division", delegado: "Karmen Arellano", email: "karrellano@zoskinhealth.com",
       provincias: ["Sevilla","Málaga","Cádiz","Córdoba","Granada","Jaén","Almería","Huelva","Ceuta","Melilla","Las Palmas","Santa Cruz de Tenerife"] },
-    { nombre: "North Corridor", delegado: "", email: "",
+    { nombre: "North Corridor", delegado: "Nerea Iratzagorria", email: "niratzagorria@zoskinhealth.com",
       provincias: ["Bizkaia","Gipuzkoa","Araba/Álava","Navarra","La Rioja","Cantabria"] },
-    { nombre: "Atlantic Cluster", delegado: "", email: "",
+    { nombre: "Atlantic Cluster", delegado: "Raúl Santana", email: "rsantana@zoskinhealth.com",
       provincias: ["A Coruña","Lugo","Ourense","Pontevedra","Asturias"] }
   ],
 
